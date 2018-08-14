@@ -80,10 +80,10 @@ module GradientPcrRepresentation
 					new_pair = Array.new(pair) #Priority queue probably uses hash code of the object, which is not retained for arrays on content change, so we cannot 'update this pair in the queue using its reference' 
 					new_pair[replace_index] = cluster_ab 
 					if duplicate_checker.contains?(new_pair) # edge case: merge will cause ab - ab pair 
-						remove_heap_element(@adjacency_list, pair)
+						remove_heap_element(@adjacency_list, pair) #TODO DEFINE THIS with decreasekey and pop (constant)
 					else
 						new_priority = distance_func(pair[replace_index], pair[other_index])
-						reinsert(@adjacency_list, new_pair, pair, new_priority, priority) #TODO DEFINE THIS with decreasekey, pop, and push
+						reinsert(@adjacency_list, new_pair, pair, new_priority, priority) #TODO DEFINE THIS remove_heap_element, and push (logn)
 						duplicate_checker << pair
 					end
 				else
