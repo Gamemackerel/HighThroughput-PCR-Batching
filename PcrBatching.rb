@@ -14,8 +14,8 @@
 
 # IN ACTIVE DEVELOPMENT, NOT READY FOR USE
 
-needs 'GradientPcrRepresentation'
-needs 'GradientPcrHelpers'
+needs 'PCR Libs/GradientPcrRepresentation'
+needs 'PCR Libs/GradientPcrHelpers'
 
 module GradientPcrBatching
 	include GradientPcrHelpers
@@ -49,9 +49,9 @@ module GradientPcrBatching
 		# Hashmap which will encode groupings of pcr operations
 		extension_cluster_to_tanneal_clusters = Hash.new
 
-		extension_clusters = cluster_by_extension_time(pcr_operations)
+		extension_clusters = cluster_by_extension_time(pcr_operations) #O(n^2logn)
 
-		log_clusters(extension_clusters)
+		return log_clusters(extension_clusters)
 
 		# extension_clusters.each do |extension_cluster|
 		# 	tanneal_clusters = cluster_by_annealling_temp(extension_cluster.members)
@@ -64,9 +64,11 @@ module GradientPcrBatching
 
 	# O(n^2Logn)
 	def cluster_by_extension_time(pcr_operations)
-		extension_graph = ExtensionClusterGraph.new(pcr_operations)
-		while !extension_graph.threshhold_func(MANDATORY_EXTENSION_COMBINATION_DIFFERENCE)
-			extension_graph.combine_nearest_clusters
+		extension_graph = ExtensionClusterGraph.new(pcr_operations) #O(n^2)
+		extension_graph.checkrep
+		while !extension_graph.threshhold_func(MANDATORY_EXTENSION_COMBINATION_DIFFERENCE) #O(n^2logn) for whole loop
+			extension_graph.combine_nearest_clusters #O(nlogn)
+			extension_graph.checkrep
 		end
 		extension_graph.cluster_list
 	end
@@ -95,9 +97,9 @@ module GradientPcrBatching
 	end
 
 	def log_clusters(cluster_list)
-		puts "#{cluster_list.size} total clusters"
+		result = "#{cluster_list.size} total clusters \n"
 		cluster_list.each do |cluster|
-			puts cluster.to_string + "\n"
+			result += cluster.to_string + "\n"
 		end
 	end
 end

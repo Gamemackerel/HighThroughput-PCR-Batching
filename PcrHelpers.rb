@@ -1,4 +1,7 @@
 module GradientPcrHelpers
+
+	require 'priority_queue'
+
 	def max (a,b)
   		a>b ? a : b
 	end
@@ -14,38 +17,44 @@ module GradientPcrHelpers
 	# find the range of a pcr operation fields in two clusters
 	# if they were to be combined into one
 	def combine_range(a,b)
-		Max(abs(yeild(a) - yeild(b)), abs(yeild(a) - yeild(b))
+		Max(abs(yeild(a) - yeild(b)), abs(yeild(a) - yeild(b)))
 	end
 
 	# Build an adjacency matrix
 	# representing the numerical difference between any 2 nodes
+	# accepts code block for |a,b| difference function
 	# O(n^2) time complexity
 	def build_dissimilarity_matrix(nodelist)
-		matrix = Array.new(@clusters.size) { |i| Array.new(@clusters.size) }
+		matrix = Array.new(nodelist.size) { |i| Array.new(nodelist.size) }
 		nodelist.each_with_index do |a, i|
 			nodelist.each_with_index do |b, j|
-				matrix[i][j] = yeild(a, b)
+				matrix[i][j] = yield(a, b)
 			end
 		end
 		matrix
 	end
 
 	def build_mst_adjacency_list(graph, nodelist)
-		parent = prim(graph)
+		parent = prim(graph) #O(n^2)
 
-		adjacency_list = FastContainers::PriorityQueue.new(:min)
-		(nodelist.size-1).times do |i| i + 1
-			adjacency_list.push([yield(nodelist[i]), yield(nodelist[j])], graph[i][parent[i]])
+		adjacency_list = PriorityQueue.new()
+		for i in 1...nodelist.size do #O(n)
+			j = parent[i]
+			pair = [yield(nodelist[i]), yield(nodelist[j])].sort #sorting ensures equality of arrays if same contents
+			adjacency_list.push(pair, graph[i][j]) #O(1)
 		end
 		adjacency_list
 	end
 
-	def change_priority(heap, obj, new_priority, old_priority)
-		if new_priority < old_priority
-			heap.decrease_priority(obj, new_priority) # O(1) with good priority list, or O(Logn) with naive one. Fastcontainers is naive, but it is also 5x as fast as alternatives for push and pop
-		elsif new_priority > old_priority
-			heap.increase_priority(obj, new_priority) # O(Logn)
-		end
+	def remove_heap_element(heap, obj)
+		heap.change_priority(obj, -1)
+		heap.delete_min_return_priority
+	end
+
+	# this method could be optimized for the case where new_priority is <= old priority
+	def replace_heap_element(heap, obj, new_obj, priority, new_priority)
+		heap.remove_heap_element(obj)
+		heap.push(new_obj, new_priority)
 	end
 
 	# naive prims algorithm to find minimum spanning tree
