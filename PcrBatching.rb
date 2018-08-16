@@ -64,13 +64,18 @@ module GradientPcrBatching
 
 	# O(n^2Logn)
 	def cluster_by_extension_time(pcr_operations)
-		extension_graph = ExtensionClusterGraph.new(pcr_operations) #O(n^2)
+		extension_graph = ExtensionClusterGraph.new({
+							pcr_operations: pcr_operations,
+							thermocycler_quantity: CYCLER_COUNT,
+							thermocycler_rows: ROW_COUNT,
+							thermocycler_columns: COLUMN_COUNT
+						}) #O(n^2)
 		extension_graph.checkrep
 		while !extension_graph.threshhold_func(MANDATORY_EXTENSION_COMBINATION_DIFFERENCE) #O(n^2logn) for whole loop
 			extension_graph.combine_nearest_clusters #O(nlogn)
 			extension_graph.checkrep
 		end
-		extension_graph.cluster_list
+		extension_graph.cluster_set
 	end
 
 	def cluster_by_annealling_temp(pcr_operations)
@@ -78,7 +83,7 @@ module GradientPcrBatching
 		while !tanneal_graph.threshhold_func(MANDATORY_TANNEAL_COMBINATION_DIFFERENCE)
 			tanneal_graph.combine_nearest_clusters
 		end
-		tanneal_graph.cluster_list
+		tanneal_graph.cluster_set
 	end
 
 	def label_pcr_operations_by_group(pcr_operations, ext_to_temp_grouping_map)
@@ -99,7 +104,8 @@ module GradientPcrBatching
 	def log_clusters(cluster_list)
 		result = "#{cluster_list.size} total clusters \n"
 		cluster_list.each do |cluster|
-			result += cluster.to_string + "\n"
+			result += "{ " + cluster.to_string + " }\n"
 		end
+		result
 	end
 end

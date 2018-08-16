@@ -54,6 +54,7 @@ module GradientPcrRepresentation
 	representation invariant
 
 	initial size of pcr_operations == clusters.map { members }.flatten.size
+    Set(pcr_operations) == Set(clusters.map { members }.flatten)
 
 	pcr operations belong to exactly 1 cluster
 
@@ -68,15 +69,25 @@ module GradientPcrRepresentation
 		# Use a list of pcr_operations to create a set of singleton clusters
 		# ready for combining into larger clusters based on similarity of extension time
 		#
-		# @param pcr_operations [Array<PcrOperation>]  list of pcr_operations to be clustered 
-		def initialize(pcr_operations) #TODO initialize with fields thermocycler_quantity, thermocycler_rows, thermocycler_columns
+		# @param opts [Hash]  arguments hash
+		# @option pcr_operations [Array<PcrOperation>]  list of pcr_operations to be clustered 
+		# @option thermocycler_quantity
+		# @option thermocycler_rows [Integer]
+		# @option thermocycler_columns [Integer]
+		def initialize(opts = {}) #TODO initialize with fields thermocycler_quantity, thermocycler_rows, thermocycler_columns
+			pcr_operations = opts[:pcr_operations]
+			@thermocycler_quantity  = opts[:thermocycler_quantity]
+			@thermocycler_rows  = opts[:thermocycler_rows]
+			@thermocycler_columns  = opts[:thermocycler_columns]
 			@size = pcr_operations.size
 			@initial_size = @size
+			@final_cluster = ExtensionCluster.singleton_cluster(pcr_operations.first) if pcr_operations.one?
+
 			# build complete graph (as adjacency matrix) with edges between 
 			# clusters as the absolute difference between those clusters' extension times 
 			initial_graph = build_dissimilarity_matrix(pcr_operations) do |a, b| #O(n^2)
 				distance_func(ExtensionCluster.singleton_cluster(a),ExtensionCluster.singleton_cluster(b)) 
-			end 
+			end
 
 			# remove all edges except those needed for mst, and then represent this graph as 
 			# a min heap of edges, with extension time difference as the priority value
@@ -102,7 +113,7 @@ module GradientPcrRepresentation
 					new_pair = Array.new(pair) #Priority queue probably uses hash code of the object, which is not retained for arrays on content change, so we cannot 'update this pair in the queue using its reference' 
 					new_pair[replace_index] = cluster_ab
 					new_pair.sort! #sorting ensures equality of arrays if same contents
-					if duplicate_checker.contains?(new_pair) # edge case: merge will cause ab - ab pair 
+					if duplicate_checker.contains?(new_pair) # edge case: merging these two pairs will cause an ab - ab pair
 						remove_heap_element(@adjacency_list, pair) #logn
 					else
 						new_priority = distance_func(pair[replace_index], pair[other_index])
@@ -119,11 +130,11 @@ module GradientPcrRepresentation
 
 
 		def distance_func(cluster_a, cluster_b)
-			if (cluster_a.size + cluster_b.size) > (thermocycler_rows * thermocycler_columns) && (TannealCluster.anneal_range(cluster_a, cluster_b) > 10)
+			if (cluster_a.size + cluster_b.size) > (@thermocycler_rows * @thermocycler_columns) && (TannealCluster.anneal_range(cluster_a, cluster_b) > 10)
 				# prevent combination if it would produce an anneal range or batch size that a single thermocycler cannot handle
-				return Float.MAX
+				return Float::MAX
 			else
-				return abs(cluster_a.mean_extension_time - cluster_b.mean_extension_time)
+				return (cluster_a.mean_extension - cluster_b.mean_extension).abs
 			end
 		end
 
@@ -131,7 +142,11 @@ module GradientPcrRepresentation
 		#
 		# @return [Boolean]  whether clustering has finished
 		def threshhold_func force_combination_distance
-			if graph_representation <= thermocycler_quantity
+			if @adjacency_list.empty?
+				return true
+			end
+
+			if graph_representation <= @thermocycler_quantity
 				if @adjacency_list.peek().priority < force_combination_distance
 					false
 				else
@@ -145,6 +160,7 @@ module GradientPcrRepresentation
 
 		def cluster_set
 			clusters = Set.new
+			clusters << @final_cluster if @final_cluster
 			@adjacency_list.each do |cluster_tuple, priority|
 				cluster_tuple.each do |cluster|
 					clusters << ExtensionCluster.get_top_level_cluster(cluster)
@@ -158,6 +174,10 @@ module GradientPcrRepresentation
 			total_pcr_members = clusters.to_a.map { |c| c.member_list }.flatten.size
 			assert(total_pcr_members == @initial_size)
 		end
+
+		def to_string 
+			"thermocycler_quantity:" + @thermocycler_quantity.to_s + "\n" + "thermocycler_rows:" + @thermocycler_rows.to_s + "\n" + "thermocycler_columns:" + @thermocycler_columns.to_s + "\n" + "size:" + @size.to_s + "\n" + "initial_size:" + @initial_size.to_s
+		end
 	end
 
 	# A cluster of PCR operations based on the
@@ -165,7 +185,7 @@ module GradientPcrRepresentation
 	class ExtensionCluster
 		include GradientPcrHelpers
 
-		attr_reader :size, :min_extension, :max_extension, :mean_extension, :max_anneal, :min_anneal, :members, :parent_clusters, :child_cluster
+		attr_reader :size, :min_extension, :max_extension, :mean_extension, :max_anneal, :min_anneal, :member_list, :parent_clusters, :child_cluster
 
 		def initialize(opts)
 			@size 	 = opts[:size]
@@ -174,21 +194,21 @@ module GradientPcrRepresentation
 			@mean_extension  = opts[:mean_extension]
 			@max_anneal 	 = opts[:max_anneal]
 			@min_anneal 	 = opts[:min_anneal]
-			@members 		 = opts[:member_list]
+			@member_list     = opts[:member_list]
 			@parent_clusters = opts[:parent_clusters]
 			@child_cluster   = opts[:child_cluster]
 		end
 
 		def self.singleton_cluster(pcr_operation)
 			ext = pcr_operation.extension_time
-			min_anneal, max_anneal = pcr_operation.anneal_temp
+			anneal = pcr_operation.anneal_temp
 			ExtensionCluster.new(
 					size: 			1, 
 					min_extension: 	ext, 
 					max_extension: 	ext, 
 					mean_extension: ext,
-					max_anneal: 	max_anneal,
-					min_anneal: 	min_anneal,
+					max_anneal: 	anneal,
+					min_anneal: 	anneal,
 					member_list: 	[pcr_operation]
 				)
 		end
@@ -198,7 +218,7 @@ module GradientPcrRepresentation
 			combined_min = min(a.min_extension, b.min_extension)
 			combined_max = max(a.max_extension, b.max_extension)
 			combined_mean = combine_means(a.size, b.size, a.mean_extension, b.mean_extension)
-			combined_members = a.members + b.members # this is a bottleneck. 
+			combined_members = a.member_list + b.member_list # this is a bottleneck. 
 								# replace with concat for in place array joining and a huge speed boost
 								# or don't store members list, and recurse to bottom of tree to get it when needed
 			ab = ExtensionCluster.new(
@@ -236,7 +256,7 @@ module GradientPcrRepresentation
 		end
 
 		def to_string()
-			"#{@members} \n extension range: #{min_extension}-#{max_extension} \n anneal range: #{min_anneal}-#{max_anneal} \n"
+			"size: #{@size} \n extension range: #{min_extension}-#{max_extension} \n anneal range: #{min_anneal}-#{max_anneal} \n"
 		end
 	end
 end

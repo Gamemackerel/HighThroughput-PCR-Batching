@@ -2,6 +2,10 @@ module GradientPcrHelpers
 
 	require 'priority_queue'
 
+	def assert(expr)
+		raise "This is wrong" unless expr
+	end
+
 	def max (a,b)
   		a>b ? a : b
 	end
@@ -17,7 +21,7 @@ module GradientPcrHelpers
 	# find the range of a pcr operation fields in two clusters
 	# if they were to be combined into one
 	def combine_range(a,b)
-		Max(abs(yeild(a) - yeild(b)), abs(yeild(a) - yeild(b)))
+		Max((yeild(a) - yeild(b).abs), (yeild(a) - yeild(b)).abs)
 	end
 
 	# Build an adjacency matrix
@@ -64,13 +68,13 @@ module GradientPcrHelpers
 	# @return [Array<Integer>]  disjoint-set forest where each item id can be used to traverse back up the path travelled 
 	def prim(graph)
 		n = graph.size
-		parent = []
-		key = []
-		visited = []
+		parent = Array.new(n)
+		key = Array.new(n)
+		visited = Array.new(n)
 
 		n.times do |i|
-			key[n] = Float.MAX
-			visited[n] = false
+			key[i] = Float::MAX
+			visited[i] = false
 		end
 
 		key[0] = 0
@@ -91,7 +95,7 @@ module GradientPcrHelpers
 
 	# finds the index of the minimum value in an array
 	def min_key key, visited
-		min = Float.MAX
+		min = Float::MAX
 		mindex = -1
 		key.each_with_index do |el, idx|
 			if el < min && visited[idx] == false
