@@ -105,23 +105,13 @@ module GradientPcrRepresentation
 			# lots of edge cases here ex:
 			# c - a, c - b
 			# after merge, c - ab, c - ab
-			duplicate_checker = Set.new # two arrays with the same contents will have the same hash code
-			@adjacency_list.each do |pair, priority| #O(nLogn) or maybe O((Logn)^2) for whole loop
-				replace_index = pair.index(cluster_a) || pair.index(cluster_b)
-				if !replace_index.nil?
-					other_index = replace_index == 1 ? 0 : 1
-					new_pair = Array.new(pair) #Priority queue probably uses hash code of the object, which is not retained for arrays on content change, so we cannot 'update this pair in the queue using its reference' 
-					new_pair[replace_index] = cluster_ab
-					new_pair.sort! #sorting ensures equality of arrays if same contents
-					if duplicate_checker.contains?(new_pair) # edge case: merging these two pairs will cause an ab - ab pair
-						remove_heap_element(@adjacency_list, pair) #logn
-					else
-						new_priority = distance_func(pair[replace_index], pair[other_index])
-						replace_heap_element(@adjacency_list, pair, new_pair, priority, new_priority) #logn
-						duplicate_checker << new_pair
-					end
-				else
-					duplicate_checker << pair #no replacement necessary
+			@adjacency_list.each do |pair, priority| #O(nLogn) or maybe O((Logn)^2) for whole loop				
+				if pair.contains?(cluster_a) || pair.contains?(cluster_b)
+					new_pair = Set.new(pair) #Priority queue probably uses hash code of the object, which is not retained for arrays on content change, so we cannot 'update this pair in the queue using its reference' 
+					new_pair.delete?(cluster_a) || new_pair.delete?(cluster_b) 
+					new_pair.add(cluster_ab)
+					new_priority = distance_func(pair[replace_index], pair[other_index])
+					replace_heap_element(@adjacency_list, pair, new_pair, priority, new_priority) #logn
 				end
 			end
 			@size = duplicate_checker.size

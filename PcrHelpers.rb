@@ -44,7 +44,7 @@ module GradientPcrHelpers
 		adjacency_list = PriorityQueue.new()
 		for i in 1...nodelist.size do #O(n)
 			j = parent[i]
-			pair = [yield(nodelist[i]), yield(nodelist[j])].sort #sorting ensures equality of arrays if same contents
+			pair = Set[yield(nodelist[i]), yield(nodelist[j])]
 			adjacency_list.push(pair, graph[i][j]) #O(1)
 		end
 		adjacency_list
@@ -58,7 +58,12 @@ module GradientPcrHelpers
 	# this method could be optimized for the case where new_priority is <= old priority
 	def replace_heap_element(heap, obj, new_obj, priority, new_priority)
 		heap.remove_heap_element(obj)
-		heap.push(new_obj, new_priority)
+		
+		if heap.has_key?(new_obj)
+			assert(heap[new_obj] == new_priority)
+		else			
+			heap.push(new_obj, new_priority)
+		end
 	end
 
 	# naive prims algorithm to find minimum spanning tree
