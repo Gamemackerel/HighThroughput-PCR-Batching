@@ -32,10 +32,19 @@ module GradientPcrBatching
 	# if it will leave some thermocyclers open
 	MANDATORY_EXTENSION_COMBINATION_DIFFERENCE = 30 
 
+	# do not group operations into the same thermocycler if the difference between their extension
+	# times is greater than this value
+	MAXIMUM_EXTENSION_COMBINATION_DIFFERENCE = 5 * 60
+
 	# difference evaluation betweeen 2 tanneal groups
 	# with any less difference than this, tanneal cluster combination is forced even
 	# if it will leave some rows open within a thermocycler
-	MANDATORY_TANNEAL_COMBINATION_DIFFERENCE = 0.3 # difference evaluation betweeen 2 groups
+	MANDATORY_TANNEAL_COMBINATION_DIFFERENCE = 0.3
+
+	# do not group operations into the same thermocycler row if the difference 
+	# between their annealling temperatures is greater than this value
+	MAXIMUM_TANNEAL_COMBINATION_DIFFERENCE = 5 * 60
+
 
 	# Given a list of pcr_operations, batches them into CYCLER_COUNT
 	# reaction groups, and within each reaction group, batches operations
@@ -72,7 +81,7 @@ module GradientPcrBatching
 							thermocycler_temp_range: 	TEMP_RANGE
 						}) #O(n^2)
 		extension_graph.checkrep
-		while !extension_graph.threshhold_func(MANDATORY_EXTENSION_COMBINATION_DIFFERENCE) #O(n^2logn) for whole loop
+		while !extension_graph.threshhold_func(MANDATORY_EXTENSION_COMBINATION_DIFFERENCE, MAXIMUM_EXTENSION_COMBINATION_DIFFERENCE) #O(n^2logn) for whole loop
 			extension_graph.combine_nearest_clusters #O(nlogn)
 			extension_graph.checkrep
 		end
