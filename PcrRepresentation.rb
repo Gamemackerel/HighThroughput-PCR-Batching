@@ -92,7 +92,8 @@ module GradientPcrRepresentation
 			# remove all edges except those needed for mst, and then represent this graph as 
 			# a min heap of edges, with extension time difference as the priority value
 			# and adding the operations to the list represented as singleton clusters
-			@adjacency_list = build_mst_adjacency_list(initial_graph, pcr_operations) { |pcr_op| ExtensionCluster.singleton_cluster(pcr_op) } #O(n^2)
+			singleton_clusters = pcr_operations.map { |pcr_op| ExtensionCluster.singleton_cluster(pcr_op) }
+			@adjacency_list = build_mst_adjacency_list(initial_graph, singleton_clusters)  #O(n^2)
 		end
 
 		def combine_nearest_clusters

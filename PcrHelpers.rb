@@ -44,8 +44,8 @@ module GradientPcrHelpers
 		adjacency_list = PriorityQueue.new()
 		for i in 1...nodelist.size do #O(n)
 			j = parent[i]
-			pair = Set[yield(nodelist[i]), yield(nodelist[j])]
-			adjacency_list.push(pair, graph[i][j]) #O(1)
+			pair = Set[nodelist[i], nodelist[j]]
+			adjacency_list.push(pair, graph[i][j]) unless adjacency_list.has_key?(pair) #O(1) (maybe not with this has key check. see build_mst-improvement branch)
 		end
 		adjacency_list
 	end
