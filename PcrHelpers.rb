@@ -57,13 +57,8 @@ module GradientPcrHelpers
 
 	# this method could be optimized for the case where new_priority is <= old priority
 	def replace_heap_element(heap, obj, new_obj, priority, new_priority)
-		heap.remove_heap_element(obj)
-		
-		if heap.has_key?(new_obj)
-			assert(heap[new_obj] == new_priority)
-		else			
-			heap.push(new_obj, new_priority)
-		end
+		remove_heap_element(heap, obj)
+		heap.push(new_obj, new_priority)
 	end
 
 	# naive prims algorithm to find minimum spanning tree

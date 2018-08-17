@@ -99,7 +99,9 @@ module GradientPcrRepresentation
 			distance = @adjacency_list.min_priority
 			cluster_a, cluster_b = @adjacency_list.min_key
 			@adjacency_list.delete_min #logn
+			@size -= 1
 			cluster_ab = ExtensionCluster.combine(cluster_a, cluster_b, distance)
+
 
 			# go through adjacency list updating pairs and distances to reflect this new merge
 			# lots of edge cases here ex:
@@ -110,11 +112,16 @@ module GradientPcrRepresentation
 					new_pair = Set.new(pair) #Priority queue probably uses hash code of the object, which is not retained for arrays on content change, so we cannot 'update this pair in the queue using its reference' 
 					new_pair.delete?(cluster_a) || new_pair.delete?(cluster_b) 
 					new_pair.add(cluster_ab)
-					new_priority = distance_func(pair[replace_index], pair[other_index])
-					replace_heap_element(@adjacency_list, pair, new_pair, priority, new_priority) #logn
+					new_priority = distance_func(new_pair.to_a[0], new_pair.to_a[1])
+					if @adjacency_list.has_key?(new_pair) #edgecase: merge will cause a duplicate pair
+						assert(@adjacency_list[new_pair] == new_priority)
+						remove_heap_element(@adjacency_list, pair)
+						@size -= 1
+					else
+						replace_heap_element(@adjacency_list, pair, new_pair, priority, new_priority) #logn	
+					end
 				end
 			end
-			@size = duplicate_checker.size
 		end
 
 
@@ -136,8 +143,8 @@ module GradientPcrRepresentation
 				return true
 			end
 
-			if graph_representation <= @thermocycler_quantity
-				if @adjacency_list.peek().priority < force_combination_distance
+			if @size <= @thermocycler_quantity
+				if @adjacency_list.min_priority < force_combination_distance
 					false
 				else
 					true
