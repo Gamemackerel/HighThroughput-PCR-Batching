@@ -98,18 +98,19 @@ module GradientPcrRepresentation
 
 		def combine_nearest_clusters
 			distance = @adjacency_list.min_priority
-			cluster_a, cluster_b = @adjacency_list.min_key
-			@adjacency_list.delete_min #logn
+			pair = @adjacency_list.delete_min_return_key #logn
+			cluster_a, cluster_b = pair.to_a
 			@size -= 1
-			cluster_ab = ExtensionCluster.combine(cluster_a, cluster_b, distance)
+			cluster_ab = cluster_a.combine_with(cluster_b)
 
 
 			# go through adjacency list updating pairs and distances to reflect this new merge
 			# lots of edge cases here ex:
 			# c - a, c - b
 			# after merge, c - ab, c - ab
-			@adjacency_list.each do |pair, priority| #O(nLogn) or maybe O((Logn)^2) for whole loop				
-				if pair.contains?(cluster_a) || pair.contains?(cluster_b)
+			@adjacency_list.each do |pair, priority| #O(nLogn) or maybe O((Logn)^2) for whole loop
+				assert(pair.size == 2)
+				if pair.include?(cluster_a) || pair.include?(cluster_b)
 					new_pair = Set.new(pair) #Priority queue probably uses hash code of the object, which is not retained for arrays on content change, so we cannot 'update this pair in the queue using its reference' 
 					new_pair.delete?(cluster_a) || new_pair.delete?(cluster_b) 
 					new_pair.add(cluster_ab)
@@ -184,6 +185,7 @@ module GradientPcrRepresentation
 		include GradientPcrHelpers
 
 		attr_reader :size, :min_extension, :max_extension, :mean_extension, :max_anneal, :min_anneal, :member_list, :parent_clusters, :child_cluster
+		attr_writer :child_cluster
 
 		def initialize(opts)
 			@size 	 = opts[:size]
@@ -211,28 +213,28 @@ module GradientPcrRepresentation
 				)
 		end
 
-		def self.combine(a, b)
-			combined_size = a.size + b.size
-			combined_min = min(a.min_extension, b.min_extension)
-			combined_max = max(a.max_extension, b.max_extension)
-			combined_mean = combine_means(a.size, b.size, a.mean_extension, b.mean_extension)
-			combined_members = a.member_list + b.member_list # this is a bottleneck. 
+		def combine_with(other)
+			combined_size = self.size + other.size
+			combined_min = min(self.min_extension, other.min_extension)
+			combined_max = max(self.max_extension, other.max_extension)
+			combined_mean = combine_means(self.size, other.size, self.mean_extension, other.mean_extension)
+			combined_members = self.member_list + other.member_list # this is a bottleneck. 
 								# replace with concat for in place array joining and a huge speed boost
 								# or don't store members list, and recurse to bottom of tree to get it when needed
-			ab = ExtensionCluster.new(
+			super_cluster = ExtensionCluster.new(
 					size: 			 combined_size, 
 					min_extension: 	 combined_min, 
 					max_extension: 	 combined_max, 
 					mean_extension:  combined_mean,
-					max_anneal: 	 max(a.max_anneal, b.max_anneal),
-					min_anneal: 	 min(a.min_anneal, b.min_anneal),
+					max_anneal: 	 max(self.max_anneal, other.max_anneal),
+					min_anneal: 	 min(self.min_anneal, other.min_anneal),
 					member_list: 	 combined_members,
-					parent_clusters: [a,b]
+					parent_clusters: [self,other]
 				)
-			a.child_cluster = ab
-			b.child_cluster = ab
+			self.child_cluster = super_cluster
+			other.child_cluster = super_cluster
 
-			ab
+			super_cluster
 		end
 
 		def self.get_top_level_cluster(cluster)
