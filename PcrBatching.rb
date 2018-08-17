@@ -21,11 +21,11 @@ module GradientPcrBatching
 	include GradientPcrHelpers
 	include GradientPcrRepresentation
 
-	# assumes all same type of thermocycler
-	COLUMN_COUNT = 12
-	ROW_COUNT = 8
+	# Thermocycler information
 	CYCLER_COUNT = 4
-
+	ROW_COUNT = 8
+	COLUMN_COUNT = 12
+	TEMP_RANGE = 10 # degree C allowable gradient temperature range in one thermocycler
 
 	# difference evaluation betweeen 2 extension groups
 	# with any less difference than this, extension cluster combination is forced even
@@ -65,10 +65,11 @@ module GradientPcrBatching
 	# O(n^2Logn)
 	def cluster_by_extension_time(pcr_operations)
 		extension_graph = ExtensionClusterGraph.new({
-							pcr_operations: pcr_operations,
-							thermocycler_quantity: CYCLER_COUNT,
-							thermocycler_rows: ROW_COUNT,
-							thermocycler_columns: COLUMN_COUNT
+							pcr_operations: 			pcr_operations,
+							thermocycler_quantity: 		CYCLER_COUNT,
+							thermocycler_rows: 			ROW_COUNT,
+							thermocycler_columns: 		COLUMN_COUNT,
+							thermocycler_temp_range: 	TEMP_RANGE
 						}) #O(n^2)
 		extension_graph.checkrep
 		while !extension_graph.threshhold_func(MANDATORY_EXTENSION_COMBINATION_DIFFERENCE) #O(n^2logn) for whole loop

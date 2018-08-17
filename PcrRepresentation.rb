@@ -75,10 +75,11 @@ module GradientPcrRepresentation
 		# @option thermocycler_rows [Integer]
 		# @option thermocycler_columns [Integer]
 		def initialize(opts = {}) #TODO initialize with fields thermocycler_quantity, thermocycler_rows, thermocycler_columns
-			pcr_operations = opts[:pcr_operations]
-			@thermocycler_quantity  = opts[:thermocycler_quantity]
-			@thermocycler_rows  = opts[:thermocycler_rows]
-			@thermocycler_columns  = opts[:thermocycler_columns]
+			pcr_operations 				= opts[:pcr_operations]
+			@thermocycler_quantity 		= opts[:thermocycler_quantity]
+			@thermocycler_rows  		= opts[:thermocycler_rows]
+			@thermocycler_columns  		= opts[:thermocycler_columns]
+			@thermocycler_temp_range 	= opts[:thermocycler_temp_range]
 			@size = pcr_operations.size
 			@initial_size = @size
 			@final_cluster = ExtensionCluster.singleton_cluster(pcr_operations.first) if pcr_operations.one?
@@ -133,7 +134,7 @@ module GradientPcrRepresentation
 
 
 		def distance_func(cluster_a, cluster_b)
-			if (cluster_a.size + cluster_b.size) > (@thermocycler_rows * @thermocycler_columns) && (TannealCluster.anneal_range(cluster_a, cluster_b) > 10)
+			if (cluster_a.size + cluster_b.size) > (@thermocycler_rows * @thermocycler_columns) && (TannealCluster.anneal_range(cluster_a, cluster_b) > @thermocycler_temp_range)
 				# prevent combination if it would produce an anneal range or batch size that a single thermocycler cannot handle
 				return Float::MAX
 			else
