@@ -244,7 +244,7 @@ module GradientPcrRepresentation
 			if @parent_clusters.nil?
 				return [@pcr_operation]
 			else
-				return members(@parent_clusters[0]).concat(members(@parent_clusters[1]))
+				return @parent_clusters[0].members.concat(@parent_clusters[1].members)
 			end
 		end
 

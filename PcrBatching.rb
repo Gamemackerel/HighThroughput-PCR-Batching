@@ -30,7 +30,7 @@ module GradientPcrBatching
 	# difference evaluation betweeen 2 extension groups
 	# with any less difference than this, extension cluster combination is forced even
 	# if it will leave some thermocyclers open
-	MANDATORY_EXTENSION_COMBINATION_DIFFERENCE = 3.0 
+	MANDATORY_EXTENSION_COMBINATION_DIFFERENCE = 30 
 
 	# difference evaluation betweeen 2 tanneal groups
 	# with any less difference than this, tanneal cluster combination is forced even
