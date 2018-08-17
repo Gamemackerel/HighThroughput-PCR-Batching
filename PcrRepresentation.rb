@@ -124,6 +124,10 @@ module GradientPcrRepresentation
 					end
 				end
 			end
+
+			if @adjacency_list.empty?
+				@final_cluster = cluster_ab
+			end
 		end
 
 
