@@ -166,7 +166,7 @@ module GradientPcrRepresentation
 			clusters << @final_cluster if @final_cluster
 			@adjacency_list.each do |cluster_tuple, priority|
 				cluster_tuple.each do |cluster|
-					clusters << ExtensionCluster.get_top_level_cluster(cluster)
+					clusters << cluster.get_containing_supercluster()
 				end
 			end
 			clusters
@@ -174,7 +174,7 @@ module GradientPcrRepresentation
 
 		def checkrep
 			clusters = cluster_set()
-			total_pcr_members = clusters.to_a.map { |c| c.member_list }.flatten.size
+			total_pcr_members = clusters.to_a.map { |c| c.members }.flatten.size
 			assert(total_pcr_members == @initial_size)
 		end
 
@@ -188,7 +188,7 @@ module GradientPcrRepresentation
 	class ExtensionCluster
 		include GradientPcrHelpers
 
-		attr_reader :size, :min_extension, :max_extension, :mean_extension, :max_anneal, :min_anneal, :member_list, :parent_clusters, :child_cluster
+		attr_reader :size, :min_extension, :max_extension, :mean_extension, :max_anneal, :min_anneal, :parent_clusters, :child_cluster
 		attr_writer :child_cluster
 
 		def initialize(opts)
@@ -198,9 +198,9 @@ module GradientPcrRepresentation
 			@mean_extension  = opts[:mean_extension]
 			@max_anneal 	 = opts[:max_anneal]
 			@min_anneal 	 = opts[:min_anneal]
-			@member_list     = opts[:member_list]
 			@parent_clusters = opts[:parent_clusters]
 			@child_cluster   = opts[:child_cluster]
+			@pcr_operation   = opts[:pcr_operation]
 		end
 
 		def self.singleton_cluster(pcr_operation)
@@ -213,7 +213,7 @@ module GradientPcrRepresentation
 					mean_extension: ext,
 					max_anneal: 	anneal,
 					min_anneal: 	anneal,
-					member_list: 	[pcr_operation]
+					pcr_operation:  pcr_operation
 				)
 		end
 
@@ -222,9 +222,6 @@ module GradientPcrRepresentation
 			combined_min = min(self.min_extension, other.min_extension)
 			combined_max = max(self.max_extension, other.max_extension)
 			combined_mean = combine_means(self.size, other.size, self.mean_extension, other.mean_extension)
-			combined_members = self.member_list + other.member_list # this is a bottleneck. 
-								# replace with concat for in place array joining and a huge speed boost
-								# or don't store members list, and recurse to bottom of tree to get it when needed
 			super_cluster = ExtensionCluster.new(
 					size: 			 combined_size, 
 					min_extension: 	 combined_min, 
@@ -232,7 +229,6 @@ module GradientPcrRepresentation
 					mean_extension:  combined_mean,
 					max_anneal: 	 max(self.max_anneal, other.max_anneal),
 					min_anneal: 	 min(self.min_anneal, other.min_anneal),
-					member_list: 	 combined_members,
 					parent_clusters: [self,other]
 				)
 			self.child_cluster = super_cluster
@@ -241,21 +237,21 @@ module GradientPcrRepresentation
 			super_cluster
 		end
 
-		def self.get_top_level_cluster(cluster)
-			if cluster.child_cluster.nil?
-				return cluster
+		# calculate members when needed
+		# lazy approach, so we dont have to keep track of the member_list for each cluster 
+		def members()
+			if @parent_clusters.nil?
+				return [@pcr_operation]
 			else
-				return get_top_level_cluster(cluster.child_cluster)
+				return members(@parent_clusters[0]).concat(members(@parent_clusters[1]))
 			end
 		end
 
-		# calculate members when needed
-		# lazy approach, if we don't want to keep track of the member_list for each cluster 
-		def self.members(cluster)
-			if parent_clusters.nil?
-				return [cluster.pcr_operation]
+		def get_containing_supercluster()
+			if @child_cluster.nil?
+				return self
 			else
-				return members(cluster.parent_clusters[0]).concat(members(cluster.parent_clusters[1]))
+				return @child_cluster.get_containing_supercluster()
 			end
 		end
 
