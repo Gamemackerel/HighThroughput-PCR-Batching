@@ -78,8 +78,8 @@ module GradientPcrRepresentation
 			@thermocycler_rows  		= opts[:thermocycler_rows]
 			@thermocycler_columns  		= opts[:thermocycler_columns]
 			@thermocycler_temp_range 	= opts[:thermocycler_temp_range]
-			@force_combination_distance = ops[:force_combination_distance]
-			@prevent_combination_distance = ops[:prevent_combination_distance]
+			@force_combination_distance = opts[:force_combination_distance]
+			@prevent_combination_distance = opts[:prevent_combination_distance]
 			@size = pcr_operations.size
 			@initial_size = @size # initial size recorded for checkrep
 
@@ -99,7 +99,7 @@ module GradientPcrRepresentation
 			@adjacency_list = build_mst_adjacency_list(initial_graph, singleton_clusters)  #O(n^2)
 		end
 
-		def cluster
+		def cluster!
 			checkrep()
 			while !threshhold_func() #O(n^2logn) for whole loop
 				combine_nearest_clusters() #O(nlogn)

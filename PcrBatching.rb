@@ -68,9 +68,9 @@ module GradientPcrBatching
 								prevent_combination_distance: MAXIMUM_EXTENSION_COMBINATION_DIFFERENCE
 							}) #O(n^2)
 
-		batched_pcrs = extension_clusters.cluster #O(n^2logn)
+		extension_clusters.cluster! #O(n^2logn)
 
-		return log_clusters(extension_clusters)
+		return log_clusters(extension_clusters.cluster_set)
 
 		# extension_clusters.each do |extension_cluster|
 		# 	tanneal_clusters = cluster_by_annealling_temp(extension_cluster.members)
