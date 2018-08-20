@@ -110,7 +110,7 @@ module GradientPcrRepresentation
 
 		def combine_nearest_clusters
 			distance = @adjacency_list.min_priority
-			pair = @adjacency_list.delete_min_return_key #logn
+			pair = @adjacency_list.delete_min_return_key
 			cluster_a, cluster_b = pair.to_a
 			@size -= 1
 			cluster_ab = cluster_a.combine_with(cluster_b)
@@ -142,7 +142,24 @@ module GradientPcrRepresentation
 			end
 		end
 
+		def combine_nearest_clusters_lazy
+			distance = @adjacency_list.min_priority
+			pair = @adjacency_list.delete_min_return_key
+			cluster_a, cluster_b = pair.to_a
 
+			if cluster_a.child_cluster || cluster_b.child_cluster 
+				# at least one of these clusters have been merged 
+				# so we must update this adjacency list entry without combining them
+				a_super = cluster_a.get_containing_supercluster()
+				b_super = cluster_b.get_containing_supercluster()
+				if a_super != b_super
+					@adjacency_list.push(Set[a_super, b_super], distance_func(a_super, b_super))
+				end
+			else
+				@size -= 1
+				cluster_ab = cluster_a.combine_with(cluster_b)
+			end
+		end
 
 		def distance_func(cluster_a, cluster_b)
 			if (cluster_a.size + cluster_b.size) > (@thermocycler_rows * @thermocycler_columns) || (TannealCluster.anneal_range(cluster_a, cluster_b) > @thermocycler_temp_range)
@@ -371,8 +388,6 @@ module GradientPcrRepresentation
 			end
 		end
 
-
-
 		def distance_func(cluster_a, cluster_b)
 			if (cluster_a.size + cluster_b.size) > (@thermocycler_rows * @thermocycler_columns) && (TannealCluster.anneal_range(cluster_a, cluster_b) > @thermocycler_temp_range)
 				# prevent combination if it would produce an anneal range or batch size that a single thermocycler cannot handle
@@ -407,7 +422,7 @@ module GradientPcrRepresentation
 			clusters << @final_cluster if @final_cluster
 			@adjacency_list.each do |cluster_tuple, priority|
 				cluster_tuple.each do |cluster|
-					clusters << cluster.get_containing_supercluster()
+					clusters << cluster.get_containing_supercluster() #shouldn't be necessary since all clusters in adjacency list will be top level clusters
 				end
 			end
 			clusters
