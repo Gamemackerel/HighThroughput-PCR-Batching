@@ -20,7 +20,7 @@ module GradientPcrHelpers
 
 
 	def combine_range(a_max, a_min, b_max, b_min)
-		max(a_max - b_min, b_max - b_min)
+		max(a_max - b_min, b_max - a_min)
 	end
 
 	# Build an adjacency matrix
