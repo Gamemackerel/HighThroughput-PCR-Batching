@@ -141,6 +141,10 @@ module GradientPcrRepresentation
 			end
 		end
 
+		def combine_anneal_range_with(other)
+			combine_range(self.max_anneal, self.min_anneal, other.max_anneal, other.min_anneal)
+		end
+
 		def get_containing_supercluster()
 			if @child_cluster.nil?
 				return self
@@ -213,7 +217,7 @@ module GradientPcrRepresentation
 
 		def distance_func(cluster_a, cluster_b)
 			if (cluster_a.size + cluster_b.size) > (@thermocycler_rows * @thermocycler_columns)  \
-			   || (combine_range(cluster_a.max_anneal, cluster_a.min_anneal, cluster_b.max_anneal, cluster_b.min_anneal) > @thermocycler_temp_range)
+			   || cluster_a.combine_anneal_range_with(cluster_b) > @thermocycler_temp_range)
 				# prevent combination of pairs if it would produce an anneal range or batch size that a single thermocycler cannot handle
 				return Float::MAX # max value represents an impossible combination
 			else
@@ -385,51 +389,6 @@ module GradientPcrRepresentation
 			@adjacency_list = build_mst_adjacency_list(initial_graph, singleton_clusters)  #O(n^2)
 		end
 
-		# combines nearest clusters until threshold function is triggered
-		# modifies the state of the graph, and returns the resulting set of clusters
-		def perform_clustering
-			checkrep()
-			while !threshhold_func() #O(n^2logn) for whole loop
-				combine_nearest_clusters() #O(nlogn)
-				checkrep()
-			end
-			cluster_set() # return
-		end
-
-		def combine_nearest_clusters
-			distance = @adjacency_list.min_priority
-			pair = @adjacency_list.delete_min_return_key #logn
-			cluster_a, cluster_b = pair.to_a
-			@size -= 1
-			cluster_ab = cluster_a.combine_with(cluster_b)
-
-
-			# go through adjacency list updating pairs and distances to reflect this new merge
-			# lots of edge cases here ex:
-			# c - a, c - b
-			# after merge, c - ab, c - ab
-			@adjacency_list.each do |pair, priority| #O(nLogn) or maybe O((Logn)^2) for whole loop
-				assert(pair.size == 2)
-				if pair.include?(cluster_a) || pair.include?(cluster_b)
-					new_pair = Set.new(pair) #Priority queue probably uses hash code of the object, which is not retained for arrays on content change, so we cannot 'update this pair in the queue using its reference' 
-					new_pair.delete?(cluster_a) || new_pair.delete?(cluster_b) 
-					new_pair.add(cluster_ab)
-					new_priority = distance_func(new_pair.to_a[0], new_pair.to_a[1])
-					if @adjacency_list.has_key?(new_pair) #edgecase: merge will cause a duplicate pair
-						assert(@adjacency_list[new_pair] == new_priority)
-						remove_heap_element(@adjacency_list, pair)
-						@size -= 1
-					else
-						replace_heap_element(@adjacency_list, pair, new_pair, priority, new_priority) #logn	
-					end
-				end
-			end
-
-			if @adjacency_list.empty?
-				@final_cluster = cluster_ab
-			end
-		end
-
 		def distance_func(cluster_a, cluster_b)
 			if (cluster_a.size + cluster_b.size) > (@thermocycler_rows * @thermocycler_columns) && (TannealCluster.anneal_range(cluster_a, cluster_b) > @thermocycler_temp_range)
 				# prevent combination if it would produce an anneal range or batch size that a single thermocycler cannot handle
@@ -456,28 +415,6 @@ module GradientPcrRepresentation
 			else
 				false
 			end
-		end
-
-
-		def cluster_set
-			clusters = Set.new
-			clusters << @final_cluster if @final_cluster
-			@adjacency_list.each do |cluster_tuple, priority|
-				cluster_tuple.each do |cluster|
-					clusters << cluster.get_containing_supercluster() #shouldn't be necessary since all clusters in adjacency list will be top level clusters
-				end
-			end
-			clusters
-		end
-
-		def checkrep
-			clusters = cluster_set()
-			total_pcr_members = clusters.to_a.map { |c| c.members }.flatten.size
-			assert(total_pcr_members == @initial_size)
-		end
-
-		def to_string 
-			"thermocycler_quantity:" + @thermocycler_quantity.to_s + "\n" + "thermocycler_rows:" + @thermocycler_rows.to_s + "\n" + "thermocycler_columns:" + @thermocycler_columns.to_s + "\n" + "size:" + @size.to_s + "\n" + "initial_size:" + @initial_size.to_s
 		end
 	end
 

@@ -76,7 +76,7 @@ module GradientPcrBatching
 		extension_clusters.each do |extension_cluster|
 
 			tanneal_graph = TannealClusterGraph.new({
-									pcr_operations: 			extension_cluster.members,
+									pcr_operations: 			extension_cluster.members(),
 									thermocycler_quantity: 		CYCLER_COUNT,
 									thermocycler_rows: 			ROW_COUNT,
 									thermocycler_columns: 		COLUMN_COUNT,
