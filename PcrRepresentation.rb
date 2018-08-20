@@ -43,63 +43,10 @@ module GradientPcrRepresentation
 		end
 	end
 
-
-=begin
-	A set of clusters of pcr_operations.
-	the clusters will be made by the proximity of extension
-	time, so that multiple pcr_operations can be optimally
-	put into the same pcr reaction if they have similar enough
-	extension time 
-	
-	representation invariant
-
-	initial size of pcr_operations == clusters.map { members }.flatten.size
-    Set(pcr_operations) == Set(clusters.map { members }.flatten)
-
-	pcr operations belong to exactly 1 cluster
-=end
-	class ExtensionClusterGraph
-		include GradientPcrHelpers
-
-		attr_reader :size, :initial_size, :adjacency_list
-
-		# Use a list of pcr_operations to create a set of singleton clusters
-		# ready for combining into larger clusters based on similarity of extension time
-		#
-		# @param opts [Hash]  arguments hash
-		# @option pcr_operations [Array<PcrOperation>]  list of pcr_operations to be clustered 
-		# @option thermocycler_quantity
-		# @option thermocycler_rows [Integer]
-		# @option thermocycler_columns [Integer]
-		# @option thermocycler_temp_range [Float]
-		def initialize(opts = {}) #TODO initialize with fields thermocycler_quantity, thermocycler_rows, thermocycler_columns
-			pcr_operations 				= opts[:pcr_operations]
-			@thermocycler_quantity 		= opts[:thermocycler_quantity]
-			@thermocycler_rows  		= opts[:thermocycler_rows]
-			@thermocycler_columns  		= opts[:thermocycler_columns]
-			@thermocycler_temp_range 	= opts[:thermocycler_temp_range]
-			@force_combination_distance = opts[:force_combination_distance]
-			@prevent_combination_distance = opts[:prevent_combination_distance]
-			@size = pcr_operations.size
-			@initial_size = @size # initial size recorded for checkrep
-
-
-			singleton_clusters = pcr_operations.map { |pcr_op| ExtensionCluster.singleton_cluster(pcr_op) }
-
-			# final cluster field only stores a cluster if there is only one cluster in the graph (adjacency list cannot represent this state)
-			@final_cluster = singleton_clusters.first if singleton_clusters.one?
-
-
-			# build complete graph (as adjacency matrix) with edges between 
-			# clusters as the absolute difference between those clusters' extension times 
-			initial_graph = build_dissimilarity_matrix(singleton_clusters) do |a, b| #O(n^2)
-				distance_func(a,b) 
-			end
-
-			@adjacency_list = build_mst_adjacency_list(initial_graph, singleton_clusters)  #O(n^2)
-		end
-
-		def cluster!
+	module ClusterGraphMethods
+		# combines nearest clusters until threshold function is triggered
+		# modifies the state of the graph, and returns the resulting set of clusters
+		def perform_clustering
 			checkrep()
 			while !threshhold_func() #O(n^2logn) for whole loop
 				combine_nearest_clusters() #O(nlogn)
@@ -161,6 +108,109 @@ module GradientPcrRepresentation
 			end
 		end
 
+		def cluster_set
+			clusters = Set.new
+			clusters << @final_cluster if @final_cluster
+			@adjacency_list.each do |cluster_tuple, priority|
+				cluster_tuple.each do |cluster|
+					clusters << cluster.get_containing_supercluster()
+				end
+			end
+			clusters
+		end
+
+		def checkrep
+			clusters = cluster_set()
+			total_pcr_members = clusters.to_a.map { |c| c.members }.flatten.size
+			assert(total_pcr_members == @initial_size)
+		end
+
+		def to_string 
+			"size:" + @size.to_s + "\n" + "clusters: " + cluster_set.to_s
+		end
+	end
+
+	module ClusterMethods
+		# calculate members when needed
+		# lazy approach, so we dont have to keep track of the member_list for each cluster 
+		def members()
+			if @parent_clusters.nil?
+				return [@pcr_operation]
+			else
+				return @parent_clusters[0].members.concat(@parent_clusters[1].members)
+			end
+		end
+
+		def get_containing_supercluster()
+			if @child_cluster.nil?
+				return self
+			else
+				return @child_cluster.get_containing_supercluster()
+			end
+		end
+
+		def to_string()
+			"size: #{@size} \n Tanneal range: #{@min_anneal}-#{@max_anneal}"
+		end
+	end
+
+
+=begin
+	A set of clusters of pcr_operations.
+	the clusters will be made by the proximity of extension
+	time, so that multiple pcr_operations can be optimally
+	put into the same pcr reaction if they have similar enough
+	extension time 
+	
+	representation invariant
+
+	initial size of pcr_operations == clusters.map { members }.flatten.size
+    Set(pcr_operations) == Set(clusters.map { members }.flatten)
+
+	pcr operations belong to exactly 1 cluster
+=end
+	class ExtensionClusterGraph
+		include GradientPcrHelpers
+		include ClusterGraphMethods
+
+		attr_reader :size, :initial_size, :adjacency_list
+
+		# Use a list of pcr_operations to create a set of singleton clusters
+		# ready for combining into larger clusters based on similarity of extension time
+		#
+		# @param opts [Hash]  arguments hash
+		# @option pcr_operations [Array<PcrOperation>]  list of pcr_operations to be clustered 
+		# @option thermocycler_quantity
+		# @option thermocycler_rows [Integer]
+		# @option thermocycler_columns [Integer]
+		# @option thermocycler_temp_range [Float]
+		def initialize(opts = {}) #TODO initialize with fields thermocycler_quantity, thermocycler_rows, thermocycler_columns
+			pcr_operations 				= opts[:pcr_operations]
+			@thermocycler_quantity 		= opts[:thermocycler_quantity]
+			@thermocycler_rows  		= opts[:thermocycler_rows]
+			@thermocycler_columns  		= opts[:thermocycler_columns]
+			@thermocycler_temp_range 	= opts[:thermocycler_temp_range]
+			@force_combination_distance = opts[:force_combination_distance]
+			@prevent_combination_distance = opts[:prevent_combination_distance]
+			@size = pcr_operations.size
+			@initial_size = @size # initial size recorded for checkrep
+
+
+			singleton_clusters = pcr_operations.map { |pcr_op| ExtensionCluster.singleton_cluster(pcr_op) }
+
+			# final cluster field only stores a cluster if there is only one cluster in the graph (adjacency list cannot represent this state)
+			@final_cluster = singleton_clusters.first if singleton_clusters.one?
+
+
+			# build complete graph (as adjacency matrix) with edges between 
+			# clusters as the absolute difference between those clusters' extension times 
+			initial_graph = build_dissimilarity_matrix(singleton_clusters) do |a, b| #O(n^2)
+				distance_func(a,b) 
+			end
+
+			@adjacency_list = build_mst_adjacency_list(initial_graph, singleton_clusters)  #O(n^2)
+		end
+
 		def distance_func(cluster_a, cluster_b)
 			if (cluster_a.size + cluster_b.size) > (@thermocycler_rows * @thermocycler_columns)  \
 			   || (combine_range(cluster_a.max_anneal, cluster_a.min_anneal, cluster_b.max_anneal, cluster_b.min_anneal) > @thermocycler_temp_range)
@@ -203,34 +253,13 @@ module GradientPcrRepresentation
 				false
 			end
 		end
-
-
-		def cluster_set
-			clusters = Set.new
-			clusters << @final_cluster if @final_cluster
-			@adjacency_list.each do |cluster_tuple, priority|
-				cluster_tuple.each do |cluster|
-					clusters << cluster.get_containing_supercluster()
-				end
-			end
-			clusters
-		end
-
-		def checkrep
-			clusters = cluster_set()
-			total_pcr_members = clusters.to_a.map { |c| c.members }.flatten.size
-			assert(total_pcr_members == @initial_size)
-		end
-
-		def to_string 
-			"size:" + @size.to_s + "\n" + "clusters: " + cluster_set.to_s
-		end
 	end
 
 	# A cluster of PCR operations based on the
 	# nearness of their extension times
 	class ExtensionCluster
 		include GradientPcrHelpers
+		include ClusterMethods
 
 		attr_reader :size, :min_extension, :max_extension, :mean_extension, :max_anneal, :min_anneal, :parent_clusters, :child_cluster, :pcr_operation
 		attr_writer :child_cluster
@@ -321,6 +350,7 @@ module GradientPcrRepresentation
 =end
 	class TannealClusterGraph
 		include GradientPcrHelpers
+		include ClusterGraphMethods
 
 		attr_reader :size, :initial_size, :adjacency_list
 
@@ -353,6 +383,17 @@ module GradientPcrRepresentation
 			# and adding the operations to the list represented as singleton clusters
 			singleton_clusters = pcr_operations.map { |pcr_op| TannealCluster.singleton_cluster(pcr_op) }
 			@adjacency_list = build_mst_adjacency_list(initial_graph, singleton_clusters)  #O(n^2)
+		end
+
+		# combines nearest clusters until threshold function is triggered
+		# modifies the state of the graph, and returns the resulting set of clusters
+		def perform_clustering
+			checkrep()
+			while !threshhold_func() #O(n^2logn) for whole loop
+				combine_nearest_clusters() #O(nlogn)
+				checkrep()
+			end
+			cluster_set() # return
 		end
 
 		def combine_nearest_clusters
@@ -444,6 +485,7 @@ module GradientPcrRepresentation
 	# nearness of their Tanneal times
 	class TannealCluster
 		include GradientPcrHelpers
+		include ClusterMethods
 
 		attr_reader :size, :min_anneal, :max_anneal, :mean_anneal, :parent_clusters, :child_cluster, :pcr_operation
 		attr_writer :child_cluster
@@ -486,28 +528,5 @@ module GradientPcrRepresentation
 
 			super_cluster
 		end
-
-		# calculate members when needed
-		# lazy approach, so we dont have to keep track of the member_list for each cluster 
-		def members()
-			if @parent_clusters.nil?
-				return [@pcr_operation]
-			else
-				return @parent_clusters[0].members.concat(@parent_clusters[1].members)
-			end
-		end
-
-		def get_containing_supercluster()
-			if @child_cluster.nil?
-				return self
-			else
-				return @child_cluster.get_containing_supercluster()
-			end
-		end
-
-		def to_string()
-			"size: #{@size} \n Tanneal range: #{@min_anneal}-#{@max_anneal}"
-		end
 	end
-
 end

@@ -58,7 +58,7 @@ module GradientPcrBatching
 		# Hashmap which will encode groupings of pcr operations
 		extension_cluster_to_tanneal_clusters = Hash.new
 
-		extension_clusters = ExtensionClusterGraph.new({
+		extension_graph = ExtensionClusterGraph.new({
 								pcr_operations: 			pcr_operations,
 								thermocycler_quantity: 		CYCLER_COUNT,
 								thermocycler_rows: 			ROW_COUNT,
@@ -68,34 +68,27 @@ module GradientPcrBatching
 								prevent_combination_distance: MAXIMUM_EXTENSION_COMBINATION_DIFFERENCE
 							}) #O(n^2)
 
-		extension_clusters.cluster! #O(n^2logn)
+		extension_clusters = extension_graph.perform_clustering #O(n^2logn)
 
-		return log_clusters(extension_clusters.cluster_set)
+		return log_clusters(extension_clusters)
 
-		# extension_clusters.each do |extension_cluster|
-		# 	tanneal_clusters = cluster_by_annealling_temp(extension_cluster.members)
-		# 	extension_cluster_to_tanneal_clusters[extension_cluster] = tanneal_clusters.cluster
-		# end
+		extension_cluster_to_tanneal_clusters = {}
+		extension_clusters.each do |extension_cluster|
+
+			tanneal_graph = TannealClusterGraph.new({
+									pcr_operations: 			extension_cluster.members,
+									thermocycler_quantity: 		CYCLER_COUNT,
+									thermocycler_rows: 			ROW_COUNT,
+									thermocycler_columns: 		COLUMN_COUNT,
+									force_combination_distance: MANDATORY_TANNEAL_COMBINATION_DIFFERENCE,
+									prevent_combination_distance: MAXIMUM_TANNEAL_COMBINATION_DIFFERENCE
+								})
+
+			extension_cluster_to_tanneal_clusters[extension_cluster] = tanneal_graph.perform_clustering
+		end
 
 		# result = label_pcr_operations_by_group(pcr_operations, extension_cluster_to_tanneal_clusters)
 		# result
-	end
-
-	# O(n^2Logn)
-	def cluster_by_extension_time(pcr_operations)
-		extension_graph = ExtensionClusterGraph.new({
-							pcr_operations: 			pcr_operations,
-							thermocycler_quantity: 		CYCLER_COUNT,
-							thermocycler_rows: 			ROW_COUNT,
-							thermocycler_columns: 		COLUMN_COUNT,
-							thermocycler_temp_range: 	TEMP_RANGE
-						}) #O(n^2)
-		extension_graph.checkrep
-		while !extension_graph.threshhold_func(MANDATORY_EXTENSION_COMBINATION_DIFFERENCE, MAXIMUM_EXTENSION_COMBINATION_DIFFERENCE) #O(n^2logn) for whole loop
-			extension_graph.combine_nearest_clusters #O(nlogn)
-			extension_graph.checkrep
-		end
-		extension_graph.cluster_set
 	end
 
 	def cluster_by_annealling_temp(pcr_operations)
