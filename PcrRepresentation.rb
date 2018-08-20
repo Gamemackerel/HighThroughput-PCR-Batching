@@ -145,9 +145,9 @@ module GradientPcrRepresentation
 
 
 		def distance_func(cluster_a, cluster_b)
-			if (cluster_a.size + cluster_b.size) > (@thermocycler_rows * @thermocycler_columns) && (TannealCluster.anneal_range(cluster_a, cluster_b) > @thermocycler_temp_range)
-				# prevent combination if it would produce an anneal range or batch size that a single thermocycler cannot handle
-				return Float::MAX
+			if (cluster_a.size + cluster_b.size) > (@thermocycler_rows * @thermocycler_columns) || (TannealCluster.anneal_range(cluster_a, cluster_b) > @thermocycler_temp_range)
+				# prevent combination of pairs if it would produce an anneal range or batch size that a single thermocycler cannot handle
+				return Float::MAX # max value represents an impossible combination
 			else
 				return (cluster_a.mean_extension - cluster_b.mean_extension).abs
 			end
@@ -158,12 +158,25 @@ module GradientPcrRepresentation
 		# @return [Boolean]  whether clustering has finished
 		def threshhold_func 
 			next_distance = @adjacency_list.min_priority
-			if @adjacency_list.empty? || next_distance > @prevent_combination_distance
+			next_pair = @adjacency_list.min_key
+			cluster_a, cluster_b = next_pair.to_a
+
+			# End clustering if there are no more clusters to combine, 
+			# or the next combination distance is greater than or equal to 
+			# the specified maximum allowable combination distance. 
+			#
+			# Impossible combination pairs (with distance Float.MAX) will not exceed
+			# distance specified in @prevent_combination_distance
+			if @adjacency_list.empty? || next_distance >= @prevent_combination_distance
 				return true
 			end
 
+			# If we have already combined enough so that all operations can be 
+			# run at once in the amount of thermocyclers available, 
+			# then we combine only if the next distance is less than or equal to
+			#  the specified distance for mandatory combination
 			if @size <= @thermocycler_quantity
-				if next_distance < @force_combination_distance
+				if next_distance <= @force_combination_distance
 					false
 				else
 					true
