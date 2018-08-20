@@ -393,7 +393,7 @@ module GradientPcrRepresentation
 				# prevent combination if it would produce an anneal range or batch size that a single thermocycler cannot handle
 				return Float::MAX
 			else
-				return (cluster_a.mean_Tanneal - cluster_b.mean_Tanneal).abs
+				return (cluster_a.mean_anneal - cluster_b.mean_anneal).abs
 			end
 		end
 
@@ -444,14 +444,14 @@ module GradientPcrRepresentation
 	class TannealCluster
 		include GradientPcrHelpers
 
-		attr_reader :size, :min_tanneal, :max_tanneal, :mean_tanneal, :parent_clusters, :child_cluster, :pcr_operation
+		attr_reader :size, :min_anneal, :max_anneal, :mean_anneal, :parent_clusters, :child_cluster, :pcr_operation
 		attr_writer :child_cluster
 
 		def initialize(opts)
 			@size 	 		 = opts[:size]
-			@min_tanneal 	 = opts[:min_tanneal]
-			@max_tanneal 	 = opts[:max_tanneal]
-			@mean_tanneal  	 = opts[:mean_tanneal]
+			@min_anneal 	 = opts[:min_anneal]
+			@max_anneal 	 = opts[:max_anneal]
+			@mean_anneal  	 = opts[:mean_anneal]
 			@parent_clusters = opts[:parent_clusters]
 			@child_cluster   = opts[:child_cluster]
 			@pcr_operation   = opts[:pcr_operation]
@@ -461,23 +461,29 @@ module GradientPcrRepresentation
 			anneal = pcr_operation.anneal_temp
 			TannealCluster.new(
 					size: 			1, 
-					min_tanneal: 	anneal, 
-					max_tanneal: 	anneal, 
-					mean_tanneal: 	anneal,
+					min_anneal: 	anneal, 
+					max_anneal: 	anneal, 
+					mean_anneal: 	anneal,
 					pcr_operation:  pcr_operation
 				)
 		end
 
+		# find the range anneal temperature in two clusters
+		# if they were to be combined into one
+		def self.anneal_range(cluster_a, cluster_b)
+			max(cluster_b.max_anneal - cluster_a.min_anneal, cluster_a.max_anneal, cluster_b.min_anneal)
+		end
+
 		def combine_with(other)
 			combined_size = self.size + other.size
-			combined_min = min(self.min_tanneal, other.min_tanneal)
-			combined_max = max(self.max_tanneal, other.max_tanneal)
-			combined_mean = combine_means(self.size, other.size, self.mean_tanneal, other.mean_tanneal)
+			combined_min = min(self.min_anneal, other.min_anneal)
+			combined_max = max(self.max_anneal, other.max_anneal)
+			combined_mean = combine_means(self.size, other.size, self.mean_anneal, other.mean_anneal)
 			super_cluster = TannealCluster.new(
 					size: 			 combined_size, 
-					min_tanneal: 	 combined_min, 
-					max_tanneal: 	 combined_max, 
-					mean_tanneal:  	 combined_mean,
+					min_anneal: 	 combined_min, 
+					max_anneal: 	 combined_max, 
+					mean_anneal:  	 combined_mean,
 					parent_clusters: [self,other]
 				)
 			self.child_cluster = super_cluster
@@ -505,7 +511,7 @@ module GradientPcrRepresentation
 		end
 
 		def to_string()
-			"size: #{@size} \n Tanneal range: #{@min_tanneal}-#{@max_tanneal}"
+			"size: #{@size} \n Tanneal range: #{@min_anneal}-#{@max_anneal}"
 		end
 	end
 

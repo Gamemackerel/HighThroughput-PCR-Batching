@@ -18,12 +18,6 @@ module GradientPcrHelpers
 		(n1*e1 + n2*e2).fdiv(n1 + n2)
 	end
 
-	# find the range of a pcr operation fields in two clusters
-	# if they were to be combined into one
-	def combine_range(a,b)
-		Max((yeild(a) - yeild(b).abs), (yeild(a) - yeild(b)).abs)
-	end
-
 	# Build an adjacency matrix
 	# representing the numerical difference between any 2 nodes
 	# accepts code block for |a,b| difference function
