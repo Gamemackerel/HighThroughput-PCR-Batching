@@ -217,7 +217,7 @@ module GradientPcrRepresentation
 
 		def distance_func(cluster_a, cluster_b)
 			if (cluster_a.size + cluster_b.size) > (@thermocycler_rows * @thermocycler_columns)  \
-			   || cluster_a.combine_anneal_range_with(cluster_b) > @thermocycler_temp_range)
+			   || (cluster_a.combine_anneal_range_with(cluster_b) > @thermocycler_temp_range)
 				# prevent combination of pairs if it would produce an anneal range or batch size that a single thermocycler cannot handle
 				return Float::MAX # max value represents an impossible combination
 			else
@@ -368,13 +368,13 @@ module GradientPcrRepresentation
 		# @option thermocycler_columns [Integer]
 		def initialize(opts = {}) #TODO initialize with fields thermocycler_quantity, thermocycler_rows, thermocycler_columns
 			pcr_operations 				= opts[:pcr_operations]
-			@thermocycler_quantity 		= opts[:thermocycler_quantity]
-			@thermocycler_rows  		= opts[:thermocycler_rows]
 			@thermocycler_columns  		= opts[:thermocycler_columns]
 			@thermocycler_temp_range 	= opts[:thermocycler_temp_range]
-			@size = pcr_operations.size
-			@initial_size = @size
-			@final_cluster = TannealCluster.singleton_cluster(pcr_operations.first) if pcr_operations.one?
+			@force_combination_distance = opts[:force_combination_distance]
+			@prevent_combination_distance = opts[:prevent_combination_distance]			
+			@size 			= pcr_operations.size
+			@initial_size	= @size
+			@final_cluster 	= TannealCluster.singleton_cluster(pcr_operations.first) if pcr_operations.one?
 
 			# build complete graph (as adjacency matrix) with edges between 
 			# clusters as the absolute difference between those clusters' Tanneal 
@@ -390,8 +390,8 @@ module GradientPcrRepresentation
 		end
 
 		def distance_func(cluster_a, cluster_b)
-			if (cluster_a.size + cluster_b.size) > (@thermocycler_rows * @thermocycler_columns) && (TannealCluster.anneal_range(cluster_a, cluster_b) > @thermocycler_temp_range)
-				# prevent combination if it would produce an anneal range or batch size that a single thermocycler cannot handle
+			if false
+				# prevent combination if it would produce an illegal tanneal grouping
 				return Float::MAX
 			else
 				return (cluster_a.mean_anneal - cluster_b.mean_anneal).abs
@@ -401,13 +401,27 @@ module GradientPcrRepresentation
 		# decides whether or not further clustering is required
 		#
 		# @return [Boolean]  whether clustering has finished
-		def threshhold_func force_combination_distance, prevent_combination_distance
-			if @adjacency_list.empty? || @adjacency_list.min_priority > prevent_combination_distance
+		def threshhold_func
+			next_distance = @adjacency_list.min_priority
+			next_pair = @adjacency_list.min_key
+			cluster_a, cluster_b = next_pair.to_a
+
+			# End clustering if there are no more clusters to combine, 
+			# or the next combination distance is greater than or equal to 
+			# the specified maximum allowable combination distance. 
+			#
+			# Impossible combination pairs (with distance Float.MAX) will not exceed
+			# distance specified in @prevent_combination_distance
+			if @adjacency_list.empty? || next_distance >= @prevent_combination_distance
 				return true
 			end
 
+			# If we have already combined enough so that all operations can be 
+			# run at once in the amount of thermocyclers available, 
+			# then we combine only if the next distance is less than or equal to
+			#  the specified distance for mandatory combination
 			if @size <= @thermocycler_quantity
-				if @adjacency_list.min_priority < force_combination_distance
+				if next_distance <= @force_combination_distance
 					false
 				else
 					true
