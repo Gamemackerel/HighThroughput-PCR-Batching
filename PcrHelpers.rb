@@ -1,3 +1,7 @@
+# Defines many general use helper methods for use by the GradientPcrBatching
+# and GradientPcrRepresentation modules.
+# These include convienent numeric comparisions, heap wrapper methods,
+# and generic graph algorithms
 module GradientPcrHelpers
 
 	require 'priority_queue'
@@ -18,15 +22,16 @@ module GradientPcrHelpers
 		(n1*e1 + n2*e2).fdiv(n1 + n2)
 	end
 
-
 	def combine_range(a_max, a_min, b_max, b_min)
 		max(a_max - b_min, b_max - a_min)
 	end
 
-	# Build an adjacency matrix
-	# representing the numerical difference between any 2 nodes
-	# accepts code block for |a,b| difference function
+	# Build an graph represented as an adjacency matrix with
+	# each cell representing the difference value of i,j items
+	# in the nodelist.
 	# O(n^2) time complexity
+	# @yield  code block for |a,b| difference function
+	# @param nodelist [Array<Object>]  represents nodes of graph, indexed by uniq key
 	def build_dissimilarity_matrix(nodelist)
 		matrix = Array.new(nodelist.size) { |i| Array.new(nodelist.size) }
 		nodelist.each_with_index do |a, i|

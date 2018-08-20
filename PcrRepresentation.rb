@@ -1,5 +1,7 @@
 needs 'PCR Libs/GradientPcrHelpers'
 
+# Defines objects used to represent individual Pcr Operations, Clusters of Pcr Representations,
+# and Graphs of Pcr operation Clusters
 module GradientPcrRepresentation
 	include GradientPcrHelpers
 
@@ -43,52 +45,57 @@ module GradientPcrRepresentation
 		end
 	end
 
+	# Core clustering logic that is used for both ExtensionClusterGraph and TannealClusterGraph to group
+	# a set of objects based on the relative proximity of their fields
 	module ClusterGraphMethods
 		# combines nearest clusters until threshold function is triggered
 		# modifies the state of the graph, and returns the resulting set of clusters
 		def perform_clustering
 			checkrep()
-			while !threshhold_func() #O(n^2logn) for whole loop
-				combine_nearest_clusters_lazy() #O(nlogn)
+			while !threshhold_func()
+				combine_nearest_clusters_lazy()
 				checkrep()
 			end
-			cluster_set() # return
+			cluster_set()
+		end
+		
+		# BROKEN -- IGNORE. Fails checkrep for more than 5 or so clusters (Lazy clustering is probably faster anyway)
+		def combine_nearest_clusters 
+			distance = @adjacency_list.min_priority
+			pair = @adjacency_list.delete_min_return_key
+			cluster_a, cluster_b = pair.to_a
+			@size -= 1
+			cluster_ab = cluster_a.combine_with(cluster_b)
+
+			# go through adjacency list updating pairs and distances to reflect this new merge
+			# lots of edge cases here ex:
+			# c - a, c - b
+			# after merge, c - ab, c - ab
+			@adjacency_list.each do |pair, priority| #O(nLogn) or maybe O((Logn)^2) for whole loop
+				assert(pair.size == 2)
+				if pair.include?(cluster_a) || pair.include?(cluster_b)
+					new_pair = Set.new(pair) #Priority queue probably uses hash code of the object, which is not retained for arrays on content change, so we cannot 'update this pair in the queue using its reference' 
+					new_pair.delete?(cluster_a) || new_pair.delete?(cluster_b) 
+					new_pair.add(cluster_ab)
+					new_priority = distance_func(new_pair.to_a[0], new_pair.to_a[1])
+					if @adjacency_list.has_key?(new_pair) #edgecase: merge will cause a duplicate pair
+						assert(@adjacency_list[new_pair] == new_priority)
+						remove_heap_element(@adjacency_list, pair)
+						@size -= 1
+					else
+						replace_heap_element(@adjacency_list, pair, new_pair, priority, new_priority) #logn	
+					end
+				end
+			end
+
+			if @adjacency_list.empty?
+				@final_cluster = cluster_ab
+			end
 		end
 
-		# def combine_nearest_clusters # BROKEN. breaks checkrep for more than 5 or so clusters (Lazy clustering is faster anyway)
-		# 	distance = @adjacency_list.min_priority
-		# 	pair = @adjacency_list.delete_min_return_key
-		# 	cluster_a, cluster_b = pair.to_a
-		# 	@size -= 1
-		# 	cluster_ab = cluster_a.combine_with(cluster_b)
-
-
-		# 	# go through adjacency list updating pairs and distances to reflect this new merge
-		# 	# lots of edge cases here ex:
-		# 	# c - a, c - b
-		# 	# after merge, c - ab, c - ab
-		# 	@adjacency_list.each do |pair, priority| #O(nLogn) or maybe O((Logn)^2) for whole loop
-		# 		assert(pair.size == 2)
-		# 		if pair.include?(cluster_a) || pair.include?(cluster_b)
-		# 			new_pair = Set.new(pair) #Priority queue probably uses hash code of the object, which is not retained for arrays on content change, so we cannot 'update this pair in the queue using its reference' 
-		# 			new_pair.delete?(cluster_a) || new_pair.delete?(cluster_b) 
-		# 			new_pair.add(cluster_ab)
-		# 			new_priority = distance_func(new_pair.to_a[0], new_pair.to_a[1])
-		# 			if @adjacency_list.has_key?(new_pair) #edgecase: merge will cause a duplicate pair
-		# 				assert(@adjacency_list[new_pair] == new_priority)
-		# 				remove_heap_element(@adjacency_list, pair)
-		# 				@size -= 1
-		# 			else
-		# 				replace_heap_element(@adjacency_list, pair, new_pair, priority, new_priority) #logn	
-		# 			end
-		# 		end
-		# 	end
-
-		# 	if @adjacency_list.empty?
-		# 		@final_cluster = cluster_ab
-		# 	end
-		# end
-
+		# Remove the shortest distance edge and combine the cluster pair into one cluster
+		# if one or both of the cluster pair has already been combined, update the edge entry 
+		# to reflect the highest level cluster that they now constitute
 		def combine_nearest_clusters_lazy
 			distance = @adjacency_list.min_priority
 			pair = @adjacency_list.delete_min_return_key
@@ -112,6 +119,9 @@ module GradientPcrRepresentation
 			end
 		end
 
+		# When using lazy combination, the adjacency list graph representation may have duplicate clusters,
+		# or clusters which have already been swallowed by a larger one. `cluster_set` returns only the 
+		# most current, highest level graph nodes 
 		def cluster_set
 			clusters = Set.new
 			clusters << @final_cluster if @final_cluster
@@ -134,6 +144,7 @@ module GradientPcrRepresentation
 		end
 	end
 
+	# Methods that are useful for both Tanneal clusters or Extension time clusters
 	module ClusterMethods
 		# calculate members when needed
 		# lazy approach, so we dont have to keep track of the member_list for each cluster 
@@ -156,27 +167,18 @@ module GradientPcrRepresentation
 				return @child_cluster.get_containing_supercluster()
 			end
 		end
-
-		def to_string()
-			"size: #{@size} \n Tanneal range: #{@min_anneal}-#{@max_anneal}"
-		end
 	end
 
-
-=begin
-	A set of clusters of pcr_operations.
-	the clusters will be made by the proximity of extension
-	time, so that multiple pcr_operations can be optimally
-	put into the same pcr reaction if they have similar enough
-	extension time 
-	
-	representation invariant
-
-	initial size of pcr_operations == clusters.map { members }.flatten.size
-    Set(pcr_operations) == Set(clusters.map { members }.flatten)
-
-	pcr operations belong to exactly 1 cluster
-=end
+	# A set of clusters of pcr_operations.
+	# the clusters will be made by the proximity of extension
+	# time, so that multiple pcr_operations can be optimally
+	# put into the same pcr reaction if they have similar enough
+	# extension time 
+	#
+	# representation invariant
+	# 	initial size of pcr_operations == clusters.map { members }.flatten.size
+	#   Set(pcr_operations) == Set(clusters.map { members }.flatten)
+	# 	pcr operations belong to exactly 1 cluster
 	class ExtensionClusterGraph
 		include GradientPcrHelpers
 		include ClusterGraphMethods
@@ -209,7 +211,6 @@ module GradientPcrRepresentation
 			# final cluster field only stores a cluster if there is only one cluster in the graph (adjacency list cannot represent this state)
 			@final_cluster = singleton_clusters.first if singleton_clusters.one?
 
-
 			# build complete graph (as adjacency matrix) with edges between 
 			# clusters as the absolute difference between those clusters' extension times 
 			initial_graph = build_dissimilarity_matrix(singleton_clusters) do |a, b| #O(n^2)
@@ -225,7 +226,7 @@ module GradientPcrRepresentation
 				# prevent combination of pairs if it would produce an anneal range or batch size that a single thermocycler cannot handle
 				return Float::MAX # max value represents an impossible combination
 			else
-				return (cluster_a.mean_extension - cluster_b.mean_extension).abs
+				return cluster_a.combine_extension_range_with(cluster_b)
 			end
 		end
 
@@ -298,6 +299,10 @@ module GradientPcrRepresentation
 				)
 		end
 
+		def combine_extension_range_with(other)
+			combine_range(self.max_extension, self.min_extension, other.max_extension, other.min_extension)
+		end
+
 		def combine_with(other)
 			combined_size = self.size + other.size
 			combined_min = min(self.min_extension, other.min_extension)
@@ -319,7 +324,9 @@ module GradientPcrRepresentation
 		end
 
 		# calculate members when needed
-		# lazy approach, so we dont have to keep track of the member_list for each cluster 
+		# lazy approach, so we dont have to keep track of the member_list for each cluster
+		# TODO: make dynamic so members only recursively calculates the first time, and then stores
+		# its members list for future calls
 		def members()
 			if @parent_clusters.nil?
 				return [@pcr_operation]
@@ -341,21 +348,16 @@ module GradientPcrRepresentation
 		end
 	end
 
-
-=begin
-	A set of clusters of pcr_operations.
-	the clusters will be made by the proximity of Annealling temperature
-	so that multiple pcr_operations can be optimally
-	put into the same pcr thermocycler row
-	if they have similar enough annealling temperature 
-	
-	representation invariant
-
-	initial size of pcr_operations == clusters.map { members }.flatten.size
-    Set(pcr_operations) == Set(clusters.mapextension_cluster { members }.flatten)
-
-	pcr operations belong to exactly 1 cluster
-=end
+	# A set of clusters of pcr_operations.
+	# the clusters will be made by the proximity of Annealling temperature
+	# so that multiple pcr_operations can be optimally
+	# put into the same pcr thermocycler row
+	# if they have similar enough annealling temperature 
+	#
+	# representation invariant
+	# 	initial size of pcr_operations == clusters.map { members }.flatten.size
+	#   Set(pcr_operations) == Set(clusters.map { members }.flatten)
+	# 	pcr operations belong to exactly 1 cluster
 	class TannealClusterGraph
 		include GradientPcrHelpers
 		include ClusterGraphMethods
@@ -483,6 +485,10 @@ module GradientPcrRepresentation
 			other.child_cluster = super_cluster
 
 			super_cluster
+		end
+
+		def to_string()
+			"size: #{@size} \n Tanneal range: #{@min_anneal}-#{@max_anneal}"
 		end
 	end
 end
