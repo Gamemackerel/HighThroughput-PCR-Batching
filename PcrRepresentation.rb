@@ -49,45 +49,45 @@ module GradientPcrRepresentation
 		def perform_clustering
 			checkrep()
 			while !threshhold_func() #O(n^2logn) for whole loop
-				combine_nearest_clusters() #O(nlogn)
+				combine_nearest_clusters_lazy() #O(nlogn)
 				checkrep()
 			end
 			cluster_set() # return
 		end
 
-		def combine_nearest_clusters
-			distance = @adjacency_list.min_priority
-			pair = @adjacency_list.delete_min_return_key
-			cluster_a, cluster_b = pair.to_a
-			@size -= 1
-			cluster_ab = cluster_a.combine_with(cluster_b)
+		# def combine_nearest_clusters # BROKEN. breaks checkrep for more than 5 or so clusters (Lazy clustering is faster anyway)
+		# 	distance = @adjacency_list.min_priority
+		# 	pair = @adjacency_list.delete_min_return_key
+		# 	cluster_a, cluster_b = pair.to_a
+		# 	@size -= 1
+		# 	cluster_ab = cluster_a.combine_with(cluster_b)
 
 
-			# go through adjacency list updating pairs and distances to reflect this new merge
-			# lots of edge cases here ex:
-			# c - a, c - b
-			# after merge, c - ab, c - ab
-			@adjacency_list.each do |pair, priority| #O(nLogn) or maybe O((Logn)^2) for whole loop
-				assert(pair.size == 2)
-				if pair.include?(cluster_a) || pair.include?(cluster_b)
-					new_pair = Set.new(pair) #Priority queue probably uses hash code of the object, which is not retained for arrays on content change, so we cannot 'update this pair in the queue using its reference' 
-					new_pair.delete?(cluster_a) || new_pair.delete?(cluster_b) 
-					new_pair.add(cluster_ab)
-					new_priority = distance_func(new_pair.to_a[0], new_pair.to_a[1])
-					if @adjacency_list.has_key?(new_pair) #edgecase: merge will cause a duplicate pair
-						assert(@adjacency_list[new_pair] == new_priority)
-						remove_heap_element(@adjacency_list, pair)
-						@size -= 1
-					else
-						replace_heap_element(@adjacency_list, pair, new_pair, priority, new_priority) #logn	
-					end
-				end
-			end
+		# 	# go through adjacency list updating pairs and distances to reflect this new merge
+		# 	# lots of edge cases here ex:
+		# 	# c - a, c - b
+		# 	# after merge, c - ab, c - ab
+		# 	@adjacency_list.each do |pair, priority| #O(nLogn) or maybe O((Logn)^2) for whole loop
+		# 		assert(pair.size == 2)
+		# 		if pair.include?(cluster_a) || pair.include?(cluster_b)
+		# 			new_pair = Set.new(pair) #Priority queue probably uses hash code of the object, which is not retained for arrays on content change, so we cannot 'update this pair in the queue using its reference' 
+		# 			new_pair.delete?(cluster_a) || new_pair.delete?(cluster_b) 
+		# 			new_pair.add(cluster_ab)
+		# 			new_priority = distance_func(new_pair.to_a[0], new_pair.to_a[1])
+		# 			if @adjacency_list.has_key?(new_pair) #edgecase: merge will cause a duplicate pair
+		# 				assert(@adjacency_list[new_pair] == new_priority)
+		# 				remove_heap_element(@adjacency_list, pair)
+		# 				@size -= 1
+		# 			else
+		# 				replace_heap_element(@adjacency_list, pair, new_pair, priority, new_priority) #logn	
+		# 			end
+		# 		end
+		# 	end
 
-			if @adjacency_list.empty?
-				@final_cluster = cluster_ab
-			end
-		end
+		# 	if @adjacency_list.empty?
+		# 		@final_cluster = cluster_ab
+		# 	end
+		# end
 
 		def combine_nearest_clusters_lazy
 			distance = @adjacency_list.min_priority
@@ -105,6 +105,10 @@ module GradientPcrRepresentation
 			else
 				@size -= 1
 				cluster_ab = cluster_a.combine_with(cluster_b)
+			end
+
+			if @adjacency_list.empty?
+				@final_cluster = cluster_ab
 			end
 		end
 
@@ -126,7 +130,7 @@ module GradientPcrRepresentation
 		end
 
 		def to_string 
-			"size:" + @size.to_s + "\n" + "clusters: " + cluster_set.to_s
+			"size:" + @size.to_s + "\n" + "clusters: " + cluster_set.to_a.to_s
 		end
 	end
 
@@ -348,7 +352,7 @@ module GradientPcrRepresentation
 	representation invariant
 
 	initial size of pcr_operations == clusters.map { members }.flatten.size
-    Set(pcr_operations) == Set(clusters.map { members }.flatten)
+    Set(pcr_operations) == Set(clusters.mapextension_cluster { members }.flatten)
 
 	pcr operations belong to exactly 1 cluster
 =end
@@ -369,6 +373,7 @@ module GradientPcrRepresentation
 		def initialize(opts = {}) #TODO initialize with fields thermocycler_quantity, thermocycler_rows, thermocycler_columns
 			pcr_operations 				= opts[:pcr_operations]
 			@thermocycler_columns  		= opts[:thermocycler_columns]
+			@thermocycler_rows  		= opts[:thermocycler_rows]			
 			@thermocycler_temp_range 	= opts[:thermocycler_temp_range]
 			@force_combination_distance = opts[:force_combination_distance]
 			@prevent_combination_distance = opts[:prevent_combination_distance]			
@@ -417,7 +422,7 @@ module GradientPcrRepresentation
 			end
 
 			# If we have already combined enough so that all operations can be 
-			# run at once in the amount of rows available, 
+			# run at once in the amount of columns available, 
 			# then we combine only if the next distance is less than or equal to
 			# the specified distance for mandatory combination
 			if @size <= @thermocycler_rows

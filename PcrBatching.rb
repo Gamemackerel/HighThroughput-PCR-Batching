@@ -87,8 +87,9 @@ module GradientPcrBatching
 			extension_cluster_to_tanneal_clusters[extension_cluster] = tanneal_graph.perform_clustering
 		end
 
-		# result = label_pcr_operations_by_group(pcr_operations, extension_cluster_to_tanneal_clusters)
-		# result
+
+		result = label_pcr_operations_by_group(pcr_operations, extension_cluster_to_tanneal_clusters)
+		result
 	end
 
 	def cluster_by_annealling_temp(pcr_operations)
