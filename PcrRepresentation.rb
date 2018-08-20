@@ -390,11 +390,11 @@ module GradientPcrRepresentation
 		end
 
 		def distance_func(cluster_a, cluster_b)
-			if false
-				# prevent combination if it would produce an illegal tanneal grouping
+			if (cluster_a.size + cluster_b.size) > (@thermocycler_columns)
+				# prevent combination if it would produce a tanneal group too big to fit in one row
 				return Float::MAX
 			else
-				return (cluster_a.mean_anneal - cluster_b.mean_anneal).abs
+				return cluster_a.combine_anneal_range_with(cluster_b)
 			end
 		end
 
@@ -417,10 +417,10 @@ module GradientPcrRepresentation
 			end
 
 			# If we have already combined enough so that all operations can be 
-			# run at once in the amount of thermocyclers available, 
+			# run at once in the amount of rows available, 
 			# then we combine only if the next distance is less than or equal to
-			#  the specified distance for mandatory combination
-			if @size <= @thermocycler_quantity
+			# the specified distance for mandatory combination
+			if @size <= @thermocycler_rows
 				if next_distance <= @force_combination_distance
 					false
 				else
