@@ -78,21 +78,34 @@ module GradientPcrRepresentation
 			@thermocycler_rows  		= opts[:thermocycler_rows]
 			@thermocycler_columns  		= opts[:thermocycler_columns]
 			@thermocycler_temp_range 	= opts[:thermocycler_temp_range]
+			@force_combination_distance = ops[:force_combination_distance]
+			@prevent_combination_distance = ops[:prevent_combination_distance]
 			@size = pcr_operations.size
-			@initial_size = @size
-			@final_cluster = ExtensionCluster.singleton_cluster(pcr_operations.first) if pcr_operations.one?
+			@initial_size = @size # initial size recorded for checkrep
+
+
+			singleton_clusters = pcr_operations.map { |pcr_op| ExtensionCluster.singleton_cluster(pcr_op) }
+
+			# final cluster field only stores a cluster if there is only one cluster in the graph (adjacency list cannot represent this state)
+			@final_cluster = singleton_clusters.first if singleton_clusters.one?
+
 
 			# build complete graph (as adjacency matrix) with edges between 
 			# clusters as the absolute difference between those clusters' extension times 
-			initial_graph = build_dissimilarity_matrix(pcr_operations) do |a, b| #O(n^2)
-				distance_func(ExtensionCluster.singleton_cluster(a),ExtensionCluster.singleton_cluster(b)) 
+			initial_graph = build_dissimilarity_matrix(singleton_clusters) do |a, b| #O(n^2)
+				distance_func(a,b) 
 			end
 
-			# remove all edges except those needed for mst, and then represent this graph as 
-			# a min heap of edges, with extension time difference as the priority value
-			# and adding the operations to the list represented as singleton clusters
-			singleton_clusters = pcr_operations.map { |pcr_op| ExtensionCluster.singleton_cluster(pcr_op) }
 			@adjacency_list = build_mst_adjacency_list(initial_graph, singleton_clusters)  #O(n^2)
+		end
+
+		def cluster
+			checkrep()
+			while !threshhold_func() #O(n^2logn) for whole loop
+				combine_nearest_clusters() #O(nlogn)
+				checkrep()
+			end
+			cluster_set() # return
 		end
 
 		def combine_nearest_clusters
@@ -143,13 +156,14 @@ module GradientPcrRepresentation
 		# decides whether or not further clustering is required
 		#
 		# @return [Boolean]  whether clustering has finished
-		def threshhold_func force_combination_distance
-			if @adjacency_list.empty?
+		def threshhold_func 
+			next_distance = @adjacency_list.min_priority
+			if @adjacency_list.empty? || next_distance > @prevent_combination_distance
 				return true
 			end
 
 			if @size <= @thermocycler_quantity
-				if @adjacency_list.min_priority < force_combination_distance
+				if next_distance < @force_combination_distance
 					false
 				else
 					true

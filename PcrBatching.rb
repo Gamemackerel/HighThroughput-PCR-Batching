@@ -58,7 +58,17 @@ module GradientPcrBatching
 		# Hashmap which will encode groupings of pcr operations
 		extension_cluster_to_tanneal_clusters = Hash.new
 
-		extension_clusters = cluster_by_extension_time(pcr_operations) #O(n^2logn)
+		extension_clusters = ExtensionClusterGraph.new({
+								pcr_operations: 			pcr_operations,
+								thermocycler_quantity: 		CYCLER_COUNT,
+								thermocycler_rows: 			ROW_COUNT,
+								thermocycler_columns: 		COLUMN_COUNT,
+								thermocycler_temp_range: 	TEMP_RANGE,
+								force_combination_distance: MANDATORY_EXTENSION_COMBINATION_DIFFERENCE,
+								prevent_combination_distance: MAXIMUM_EXTENSION_COMBINATION_DIFFERENCE
+							}) #O(n^2)
+
+		batched_pcrs = extension_clusters.cluster #O(n^2logn)
 
 		return log_clusters(extension_clusters)
 

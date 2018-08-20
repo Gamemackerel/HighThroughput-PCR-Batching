@@ -38,6 +38,12 @@ module GradientPcrHelpers
 		matrix
 	end
 
+	# remove all edges except those needed for mst, and then represent this graph as 
+	# a min heap of edges, with extension time difference as the priority value
+	# and adding the operations to the list represented as singleton clusters
+	#
+	# requires that the indicies of `graph` matrix correspond to the indicies of `nodelist`
+	# so that distances between nodes can be related to the node objects 
 	def build_mst_adjacency_list(graph, nodelist)
 		parent = prim(graph) #O(n^2)
 
