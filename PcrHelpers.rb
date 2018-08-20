@@ -18,6 +18,11 @@ module GradientPcrHelpers
 		(n1*e1 + n2*e2).fdiv(n1 + n2)
 	end
 
+
+	def combine_range(a_max, a_min, b_max, b_min)
+		max(a_max - b_min, b_max - b_min)
+	end
+
 	# Build an adjacency matrix
 	# representing the numerical difference between any 2 nodes
 	# accepts code block for |a,b| difference function
@@ -105,5 +110,4 @@ module GradientPcrHelpers
 		end
 		mindex
 	end
-
 end

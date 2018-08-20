@@ -162,7 +162,8 @@ module GradientPcrRepresentation
 		end
 
 		def distance_func(cluster_a, cluster_b)
-			if (cluster_a.size + cluster_b.size) > (@thermocycler_rows * @thermocycler_columns) || (TannealCluster.anneal_range(cluster_a, cluster_b) > @thermocycler_temp_range)
+			if (cluster_a.size + cluster_b.size) > (@thermocycler_rows * @thermocycler_columns)  \
+			   || (combine_range(cluster_a.max_anneal, cluster_a.min_anneal, cluster_b.max_anneal, cluster_b.min_anneal) > @thermocycler_temp_range)
 				# prevent combination of pairs if it would produce an anneal range or batch size that a single thermocycler cannot handle
 				return Float::MAX # max value represents an impossible combination
 			else
@@ -466,12 +467,6 @@ module GradientPcrRepresentation
 					mean_anneal: 	anneal,
 					pcr_operation:  pcr_operation
 				)
-		end
-
-		# find the range anneal temperature in two clusters
-		# if they were to be combined into one
-		def self.anneal_range(cluster_a, cluster_b)
-			max(cluster_b.max_anneal - cluster_a.min_anneal, cluster_a.max_anneal, cluster_b.min_anneal)
 		end
 
 		def combine_with(other)
