@@ -205,7 +205,7 @@ module GradientPcrRepresentation
 		end
 
 		def to_string 
-			"thermocycler_quantity:" + @thermocycler_quantity.to_s + "\n" + "thermocycler_rows:" + @thermocycler_rows.to_s + "\n" + "thermocycler_columns:" + @thermocycler_columns.to_s + "\n" + "size:" + @size.to_s + "\n" + "initial_size:" + @initial_size.to_s
+			"size:" + @size.to_s + "\n" + "clusters: " + cluster_set.to_s
 		end
 	end
 
