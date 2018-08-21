@@ -52,8 +52,9 @@ module GradientPcrBatching
 	# into ROW_COUNT temperature groups, to take advantage of gradient pcr
 	#
 	# @param [Array<PcrOperation>]  list of operations to find a batching for
-	# @param [Array<PcrOperation>]  new (copied) list, where each pcr operation 
-	# 						now has batch numbers for both thermocycler and row
+	# @return [Hash<ExensionCluster, Set<TannealCluster>>]  a mapping from 
+	# 				a group of pcr operations with similar extension time to the set of  
+	# 				sub-groups of that group which have similar anneal temperature. 
 	def batch(pcr_operations)
 
 		# Hashmap which will encode groupings of pcr operations
