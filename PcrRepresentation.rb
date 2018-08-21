@@ -10,7 +10,7 @@ module GradientPcrRepresentation
 	# for a pcr.
 	class PcrOperation
 
-		attr_reader :extension_time, :anneal_temp, :extension_group, :tanneal_group
+		attr_reader :extension_time, :anneal_temp, :extension_group, :tanneal_group, :unique_id
 
 		# make a brand new PcrOperation.
 		#
@@ -28,6 +28,7 @@ module GradientPcrRepresentation
 			@anneal_temp 		= opts[:anneal_temp]
 			@extension_group 	= opts[:extension_group]
 			@tanneal_group 		= opts[:tanneal_group]
+			@unique_id			= opts[:unique_id]
 		end
 
 		# get an exact copy of this pcr operation
