@@ -25,11 +25,12 @@ module GradientPcrBatching
 	CYCLER_COUNT = 4
 	ROW_COUNT = 8
 	COLUMN_COUNT = 12
-	TEMP_RANGE = 15 # degree C allowable gradient temperature range in one thermocycler
+	TEMP_RANGE = 17 # degree C allowable gradient temperature range in one thermocycler
 
 	# difference evaluation betweeen 2 extension groups
-	# with any less difference than this, extension cluster combination is forced even
-	# if it will leave some thermocyclers open
+	# with any less difference than this, pcr operations will be placed
+	# into the same thermocycler and use the same extension time,
+	# even if it will leave some thermocyclers open
 	MANDATORY_EXTENSION_COMBINATION_DIFFERENCE = 30 
 
 	# do not group operations into the same thermocycler if the difference between their extension
@@ -37,8 +38,8 @@ module GradientPcrBatching
 	MAXIMUM_EXTENSION_COMBINATION_DIFFERENCE = 300
 
 	# difference evaluation betweeen 2 tanneal groups
-	# with any less difference than this, tanneal cluster combination is forced even
-	# if it will leave some rows open within a thermocycler
+	# with any less difference than this, pcr operations will be put into the
+	# same thermocycler row, even that means some rows will be empty
 	MANDATORY_TANNEAL_COMBINATION_DIFFERENCE = 0.3
 
 	# do not group operations into the same thermocycler row if the difference 
