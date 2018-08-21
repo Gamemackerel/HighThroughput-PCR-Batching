@@ -235,6 +235,11 @@ module GradientPcrRepresentation
 		#
 		# @return [Boolean]  whether clustering has finished
 		def threshhold_func 
+
+			if @adjacency_list.empty?  #this case is reached when weve combined into only a single cluster
+				return true
+			end
+
 			next_distance = @adjacency_list.min_priority
 			next_pair = @adjacency_list.min_key
 			cluster_a, cluster_b = next_pair.to_a
@@ -245,7 +250,7 @@ module GradientPcrRepresentation
 			#
 			# Impossible combination pairs (with distance Float.MAX) will not exceed
 			# distance specified in @prevent_combination_distance
-			if @adjacency_list.empty? || next_distance >= @prevent_combination_distance
+			if (next_distance >= @prevent_combination_distance)
 				return true
 			end
 
@@ -425,7 +430,7 @@ module GradientPcrRepresentation
 			end
 
 			# If we have already combined enough so that all operations can be 
-			# run at once in the amount of columns available, 
+			# run at once in the amount of rows available, 
 			# then we combine only if the next distance is less than or equal to
 			# the specified distance for mandatory combination
 			if @size <= @thermocycler_rows
