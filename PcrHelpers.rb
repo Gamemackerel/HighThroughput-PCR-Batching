@@ -90,7 +90,7 @@ module GradientPcrHelpers
 		key[0] = 0
 		parent[0] = -1
 		
-		(n).times do
+		(n-1).times do
 			i = min_key(key, visited)
 			visited[i] = true
 			n.times do |j|
