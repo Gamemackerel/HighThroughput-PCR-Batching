@@ -90,25 +90,26 @@ module GradientPcrHelpers
 		key[0] = 0
 		parent[0] = -1
 		
-		(n-1).times do
+		(n).times do
 			i = min_key(key, visited)
 			visited[i] = true
 			n.times do |j|
-				if graph[i][j] >= 0 && visited[j] == false && graph[i][j] < key[j]
+				if graph[i][j] >= 0 && visited[j] == false && graph[i][j] <= key[j]
 					parent[j] = i
 					key[j] = graph[i][j]
 				end
 			end
 		end
+		
 		parent
 	end
 
 	# finds the index of the minimum value in an array
 	def min_key key, visited
 		min = Float::MAX
-		mindex = -1
+		mindex = nil
 		key.each_with_index do |el, idx|
-			if el < min && visited[idx] == false
+			if el <= min && visited[idx] == false
 				min = el
 				mindex = idx
 			end

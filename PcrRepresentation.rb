@@ -29,6 +29,10 @@ module GradientPcrRepresentation
 			@extension_group 	= opts[:extension_group]
 			@tanneal_group 		= opts[:tanneal_group]
 			@unique_id			= opts[:unique_id]
+			
+			if @extension_time.nil? || @anneal_temp.nil? || @extension_time.zero? || @anneal_temp.zero?
+			    raise "Every pcr operation must have a non-zero extension time and anneal temp"
+			end
 		end
 
 		# get an exact copy of this pcr operation
@@ -52,10 +56,8 @@ module GradientPcrRepresentation
 		# combines nearest clusters until threshold function is triggered
 		# modifies the state of the graph, and returns the resulting set of clusters
 		def perform_clustering
-			checkrep()
 			while !threshhold_func()
 				combine_nearest_clusters_lazy()
-				checkrep()
 			end
 			cluster_set()
 		end
@@ -133,6 +135,12 @@ module GradientPcrRepresentation
 			end
 			clusters
 		end
+		
+		# Gets Float value which represents an impossible combination distance.
+		# Float::MAX cannot be used for this value, since it is critical to prims
+        def max_distance
+            (Float::MAX - 1)
+        end
 
 		def checkrep
 			clusters = cluster_set()
@@ -183,7 +191,7 @@ module GradientPcrRepresentation
 	class ExtensionClusterGraph
 		include GradientPcrHelpers
 		include ClusterGraphMethods
-
+		
 		attr_reader :size, :initial_size, :adjacency_list
 
 		# Use a list of pcr_operations to create a set of singleton clusters
@@ -225,7 +233,7 @@ module GradientPcrRepresentation
 			if (cluster_a.size + cluster_b.size) > (@thermocycler_rows * @thermocycler_columns)  \
 			   || (cluster_a.combine_anneal_range_with(cluster_b) > @thermocycler_temp_range)
 				# prevent combination of pairs if it would produce an anneal range or batch size that a single thermocycler cannot handle
-				return Float::MAX # max value represents an impossible combination
+				return max_distance
 			else
 				return cluster_a.combine_extension_range_with(cluster_b)
 			end
@@ -405,7 +413,7 @@ module GradientPcrRepresentation
 		def distance_func(cluster_a, cluster_b)
 			if (cluster_a.size + cluster_b.size) > (@thermocycler_columns)
 				# prevent combination if it would produce a tanneal group too big to fit in one row
-				return Float::MAX
+				return max_distance
 			else
 				return cluster_a.combine_anneal_range_with(cluster_b)
 			end
