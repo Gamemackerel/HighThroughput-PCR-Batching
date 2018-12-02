@@ -30,8 +30,8 @@ module GradientPcrBatching
     # even if it will leave some thermocyclers open
     MANDATORY_EXTENSION_COMBINATION_DIFFERENCE = 30 
 
-    # if the difference evaluation betweeen 2 extension groups
-    # then they will not be grouped into the same thermocycler
+    # if the difference evaluation betweeen 2 extension groups is greater
+    # than this, then they will not be grouped into the same thermocycler
     MAXIMUM_EXTENSION_COMBINATION_DIFFERENCE = 300
 
     # if the difference evaluation betweeen 2 tanneal groups
@@ -39,8 +39,8 @@ module GradientPcrBatching
     # same thermocycler row, even that means some rows will be empty
     MANDATORY_TANNEAL_COMBINATION_DIFFERENCE = 0.3
 
-    # if the difference evaluation betweeen 2 tanneal groups
-    # then they will not be grouped into the same thermocycler row 
+    # if the difference evaluation betweeen 2 tanneal groups is greater
+    # than this, then they will not be grouped into the same thermocycler row 
     MAXIMUM_TANNEAL_COMBINATION_DIFFERENCE = 3
 
 
