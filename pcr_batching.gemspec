@@ -6,7 +6,10 @@ Gem::Specification.new do |s|
   s.description = "A clustering algorithm useful to laboratory biologists for increasing the efficiency of a PCR workflow. Using this batching-aid, many seperate PCR reactions can be performed at once in one or more 'Gradient PCR' enabled thermocyclers, by grouping the reactions into coherent batches that use a shared extension time and anneal temperature. Each row of each thermocycler can accomodate a single reaction group."
   s.authors     = ["Abraham Miller"]
   s.email       = 'abemill@uw.eu'
-  s.files       = ["lib/pcr_batching.rb", "lib/pcr_batching_representation.rb", "lib/pcr_batching_helpers.rb", ]
+  require 'rake'
+  s.files = FileList[ 'lib     .rb',
+                      '[A-Z]*',
+                      'test/   *'].to_a
   s.homepage    =
     'http://rubygems.org/gems/pcr-batching'
   s.license       = 'MIT'
