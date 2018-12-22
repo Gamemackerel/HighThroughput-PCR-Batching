@@ -2,7 +2,7 @@
 # and Graphs of Pcr operation Clusters
 #
 
-require './lib/gradient_pcr_helpers'
+require './lib/pcr_batching_helpers'
 
 
 # Object representation for an individual pcr reaction.

@@ -1,5 +1,5 @@
 require 'test/unit'
-require './gradient_pcr_batcher'
+require './pcr_batching'
 
 ##################### SETTING UP TESTS ####################
 #### TEST 1

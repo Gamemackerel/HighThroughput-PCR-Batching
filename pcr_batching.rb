@@ -1,5 +1,5 @@
-require './lib/gradient_pcr_representation'
-require './lib/gradient_pcr_helpers'
+require './lib/pcr_batching_representation'
+require './lib/pcr_batching_helpers'
 
 # Smart Pcr batcher which uses a nearest neighbor chain algorithm to 
 # batch pcr operations with their nearest neighbors by extension time until
