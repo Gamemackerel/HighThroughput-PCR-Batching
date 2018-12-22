@@ -1,5 +1,5 @@
 require 'test/unit'
-require './pcr_batching'
+require './lib/pcr_batching'
 
 ##################### SETTING UP TESTS ####################
 #### TEST 1
@@ -109,7 +109,7 @@ end
 
 test_1_result = test_1.batch true
 test_2_result = test_2.batch true
-test_3_result = test_3.batch true
+test_3.batch true # dont inspect the result of test3, just rely on checkreps
 
 
 ##################### OUTPUT COMPARISONS ##################

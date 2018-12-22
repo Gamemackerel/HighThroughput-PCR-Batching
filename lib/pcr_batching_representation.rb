@@ -81,7 +81,6 @@ module ClusterGraphMethods
     # if one or both of the cluster pair has already been combined, update the edge entry 
     # to reflect the highest level cluster that they now constitute
     def combine_nearest_clusters_lazy
-        distance = @adjacency_list.min_priority
         pair = @adjacency_list.delete_min_return_key
         cluster_a, cluster_b = pair.to_a
 
@@ -187,7 +186,11 @@ class ExtensionClusterGraph
         singleton_clusters = @pcr_operations.map { |pcr_op| ExtensionCluster.singleton_cluster(pcr_op) }
 
         # final cluster field only stores a cluster if there is only one cluster in the graph (adjacency list cannot represent this state)
-        @final_cluster = singleton_clusters.first if singleton_clusters.one?
+        if singleton_clusters.one?
+            @final_cluster = singleton_clusters.first 
+        else
+            @final_cluster = nil
+        end
 
         # build complete graph (as adjacency matrix) with edges between 
         # clusters as the absolute difference between those clusters' extension times 
@@ -212,14 +215,11 @@ class ExtensionClusterGraph
     #
     # @return [Boolean]  whether clustering has finished
     def threshhold_func 
-
         if @adjacency_list.empty?  #this case is reached when weve combined into only a single cluster
             return true
         end
 
         next_distance = @adjacency_list.min_priority
-        next_pair = @adjacency_list.min_key
-        cluster_a, cluster_b = next_pair.to_a
 
         # End clustering if there are no more clusters to combine, 
         # or the next combination distance is greater than or equal to 
@@ -343,14 +343,15 @@ class TannealClusterGraph
     attr_reader :size, :initial_size, :adjacency_list
 
     def initialize(opts = {})
-        @pcr_operations              = opts[:pcr_operations]
-        @thermocycler_columns       = opts[:thermocycler_columns]
-        @thermocycler_rows          = opts[:thermocycler_rows]          
-        @thermocycler_temp_range    = opts[:thermocycler_temp_range]
-        @force_combination_distance = opts[:force_combination_distance]
+        @pcr_operations               = opts[:pcr_operations]
+        @thermocycler_columns         = opts[:thermocycler_columns]
+        @thermocycler_rows            = opts[:thermocycler_rows]          
+        @thermocycler_temp_range      = opts[:thermocycler_temp_range]
+        @force_combination_distance   = opts[:force_combination_distance]
         @prevent_combination_distance = opts[:prevent_combination_distance]         
         @size           = @pcr_operations.size
         @initial_size   = @size
+        @final_cluster  = nil
         @final_cluster  = TannealCluster.singleton_cluster(@pcr_operations.first) if @pcr_operations.one?
 
         # build complete graph (as adjacency matrix) with edges between 
@@ -380,8 +381,7 @@ class TannealClusterGraph
     # @return [Boolean]  whether clustering has finished
     def threshhold_func
         next_distance = @adjacency_list.min_priority
-        next_pair = @adjacency_list.min_key
-        cluster_a, cluster_b = next_pair.to_a
+    
 
         # End clustering if there are no more clusters to combine, 
         # or the next combination distance is greater than or equal to 
