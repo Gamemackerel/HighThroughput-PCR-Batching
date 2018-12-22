@@ -1,5 +1,5 @@
-require 'lib/gradient_pcr_representation'
-require 'lib/gradient_pcr_helpers'
+require './lib/gradient_pcr_representation'
+require './lib/gradient_pcr_helpers'
 
 # Smart Pcr batcher which uses a nearest neighbor chain algorithm to 
 # batch pcr operations with their nearest neighbors by extension time until
@@ -43,7 +43,7 @@ class PcrBatcher
     #                   grouped into the same thermocycler row
     # @option opts [Array<PcrOperation>] :pcr_operations  list of operations 
     #                   to find a batching for
-    def init opts = {}
+    def initialize opts = {}
         opts = defaults.merge opts
         @cycler_count           = opts[:cycler_count]
         @row_count              = opts[:row_count]
@@ -53,10 +53,10 @@ class PcrBatcher
         @mand_tanneal_comb_diff = opts[:mand_tanneal_comb_diff]
         @max_ext_comb_diff      = opts[:max_ext_comb_diff]
         @max_tanneal_comb_diff  = opts[:max_tanneal_comb_diff]
-        @pcr_operations         = opts[:pcr_operations]
+        @pcr_operations         = opts[:pcr_operations] || []
     end
 
-    # Batching settings which work well for the UW BIOFAB PCR workflow
+    # Batching settings that work well for the UW BIOFAB PCR workflow
     # which uses 4 X thermocyclers
     def defaults
         {
@@ -68,6 +68,7 @@ class PcrBatcher
             mand_tanneal_comb_diff: 0.3,
             max_ext_comb_diff: 300.0,
             max_tanneal_comb_diff: 3.0,
+            pcr_operations: [],
         }
     end
 
@@ -88,46 +89,50 @@ class PcrBatcher
     # @option opts [Integer] :unique_id  identifier to track a pcr operation
     #                through its being batched
     def add_pcr_operation opts = {}
-        @pcr_operations << PcrOperation.new({
-            extension_time:     @extension_time,
-            anneal_temp:        @anneal_temp,
-            extension_group:    @extension_group,
-            tanneal_group:      @tanneal_group,
-            unique_id:          @unique_id,
-        })
+        @pcr_operations << PcrOperation.new(
+            extension_time:  opts[:extension_time],
+            anneal_temp:     opts[:anneal_temp],
+            unique_id:       opts[:unique_id],
+        )
+    end
+
+    def add_many_pcr_operations operations
+        operations.each { |op| add_pcr_operation op }
     end
 
     # Batches @pcr_operations into @cycler_count
     # reaction groups, and within each reaction group, batches operations
     # into @row_count temperature groups.
-    #
+    # 
+    # @param checkrep [Boolean]  whether or not to check representation invariants
+    #               during clustering; very slow and only necessary while testing
     # @return [Hash<ExensionCluster, Set<TannealCluster>>]  a mapping from 
     #               a group of pcr operations with similar extension time to the set of  
     #               sub-groups of that group which have similar anneal temperature. 
-    def batch
+    def batch(use_checkrep = false)
         extension_cluster_to_tanneal_clusters = Hash.new
 
-        extension_graph = ExtensionClusterGraph.new({
+        extension_graph = ExtensionClusterGraph.new(
                     pcr_operations:               @pcr_operations,
                     thermocycler_quantity:        @cycler_count,
                     thermocycler_rows:            @row_count,
                     thermocycler_columns:         @column_count,
                     thermocycler_temp_range:      @temp_range,
-                    force_combination_distance:   MANDATORY_EXTENSION_COMBINATION_DIFFERENCE,
-                    prevent_combination_distance: MAXIMUM_EXTENSION_COMBINATION_DIFFERENCE
-                }) # O(n^2)
+                    force_combination_distance:   @mand_ext_comb_diff,
+                    prevent_combination_distance: @max_ext_comb_diff
+                ) # O(n^2)
 
-        extension_clusters = extension_graph.perform_clustering # O(n^2)
+        extension_clusters = extension_graph.perform_clustering use_checkrep # O(n^2)
         extension_clusters.each do |extension_cluster| # m clusters =>  O(m) 
-            tanneal_graph = TannealClusterGraph.new({  # q pcr operations per cluster => O(q^2) 
+            tanneal_graph = TannealClusterGraph.new(  # q pcr operations per cluster => O(q^2) 
                         pcr_operations:               extension_cluster.members,
                         thermocycler_rows:            @row_count,
                         thermocycler_columns:         @column_count,
-                        force_combination_distance:   MANDATORY_TANNEAL_COMBINATION_DIFFERENCE,
-                        prevent_combination_distance: MAXIMUM_TANNEAL_COMBINATION_DIFFERENCE
-                    })
+                        force_combination_distance:   @mand_tanneal_comb_diff,
+                        prevent_combination_distance: @max_tanneal_comb_diff
+                    )
 
-            tanneal_clusters = tanneal_graph.perform_clustering #O(q^2)
+            tanneal_clusters = tanneal_graph.perform_clustering use_checkrep #O(q^2)
             extension_cluster_to_tanneal_clusters[extension_cluster] = tanneal_clusters
         end # m * q = n => O(2 * n^2) 
 

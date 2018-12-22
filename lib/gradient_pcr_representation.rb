@@ -2,7 +2,7 @@
 # and Graphs of Pcr operation Clusters
 #
 
-require 'PCR Libs/GradientPcrHelpers'
+require './lib/gradient_pcr_helpers'
 
 
 # Object representation for an individual pcr reaction.
@@ -40,13 +40,17 @@ class PcrOperation
 
     # get an exact copy of this pcr operation
     def clone
-        PcrOperation.new({
+        PcrOperation.new(
             extension_time:     @extension_time,
             anneal_temp:        @anneal_temp,
             extension_group:    @extension_group,
             tanneal_group:      @tanneal_group,
             unique_id:          @unique_id,
-        })
+        )
+    end
+
+    def <=> other
+        unique_id <=> other.unique_id
     end
 
     def to_s 
@@ -65,9 +69,10 @@ end
 module ClusterGraphMethods
     # combines nearest clusters until threshold function is triggered
     # modifies the state of the graph, and returns the resulting set of clusters
-    def perform_clustering
+    def perform_clustering with_checkrep
         while !threshhold_func
             combine_nearest_clusters_lazy
+            checkrep if with_checkrep
         end
         cluster_set
     end
@@ -121,7 +126,8 @@ module ClusterGraphMethods
     def checkrep
         clusters = cluster_set
         total_pcr_members = clusters.to_a.map { |c| c.members }.flatten.size
-        assert(total_pcr_members == @initial_size)
+        assert total_pcr_members == @initial_size
+        assert @pcr_operations.sort == clusters.map { |c| c.members }.flatten.sort
     end
 
     def to_s 
@@ -162,24 +168,23 @@ end
 # extension time 
 #
 class ExtensionClusterGraph
-    include GradientPcrHelpers
     include ClusterGraphMethods
     
     attr_reader :size, :initial_size, :adjacency_list
 
     def initialize(opts = {})
-        pcr_operations              = opts[:pcr_operations]
-        @thermocycler_quantity      = opts[:thermocycler_quantity]
-        @thermocycler_rows          = opts[:thermocycler_rows]
-        @thermocycler_columns       = opts[:thermocycler_columns]
-        @thermocycler_temp_range    = opts[:thermocycler_temp_range]
-        @force_combination_distance = opts[:force_combination_distance]
+        @pcr_operations               = opts[:pcr_operations]
+        @thermocycler_quantity        = opts[:thermocycler_quantity]
+        @thermocycler_rows            = opts[:thermocycler_rows]
+        @thermocycler_columns         = opts[:thermocycler_columns]
+        @thermocycler_temp_range      = opts[:thermocycler_temp_range]
+        @force_combination_distance   = opts[:force_combination_distance]
         @prevent_combination_distance = opts[:prevent_combination_distance]
-        @size = pcr_operations.size
+        @size = @pcr_operations.size
         @initial_size = @size # initial size recorded for checkrep
 
 
-        singleton_clusters = pcr_operations.map { |pcr_op| ExtensionCluster.singleton_cluster(pcr_op) }
+        singleton_clusters = @pcr_operations.map { |pcr_op| ExtensionCluster.singleton_cluster(pcr_op) }
 
         # final cluster field only stores a cluster if there is only one cluster in the graph (adjacency list cannot represent this state)
         @final_cluster = singleton_clusters.first if singleton_clusters.one?
@@ -246,7 +251,6 @@ end
 # nearness of their extension times
 #
 class ExtensionCluster
-    include GradientPcrHelpers
     include ClusterMethods
 
     attr_reader :size, :min_extension, :max_extension, :mean_extension, :max_anneal, :min_anneal, :parent_clusters, :child_cluster, :pcr_operation
@@ -334,32 +338,31 @@ end
 # if they have similar enough annealling temperature 
 #
 class TannealClusterGraph
-    include GradientPcrHelpers
     include ClusterGraphMethods
 
     attr_reader :size, :initial_size, :adjacency_list
 
     def initialize(opts = {})
-        pcr_operations              = opts[:pcr_operations]
+        @pcr_operations              = opts[:pcr_operations]
         @thermocycler_columns       = opts[:thermocycler_columns]
         @thermocycler_rows          = opts[:thermocycler_rows]          
         @thermocycler_temp_range    = opts[:thermocycler_temp_range]
         @force_combination_distance = opts[:force_combination_distance]
         @prevent_combination_distance = opts[:prevent_combination_distance]         
-        @size           = pcr_operations.size
+        @size           = @pcr_operations.size
         @initial_size   = @size
-        @final_cluster  = TannealCluster.singleton_cluster(pcr_operations.first) if pcr_operations.one?
+        @final_cluster  = TannealCluster.singleton_cluster(@pcr_operations.first) if @pcr_operations.one?
 
         # build complete graph (as adjacency matrix) with edges between 
         # clusters as the absolute difference between those clusters' Tanneal 
-        initial_graph = build_dissimilarity_matrix(pcr_operations) do |a, b| #O(n^2)
+        initial_graph = build_dissimilarity_matrix(@pcr_operations) do |a, b| #O(n^2)
             distance_func(TannealCluster.singleton_cluster(a),TannealCluster.singleton_cluster(b)) 
         end
 
         # remove all edges except those needed for mst, and then represent this graph as 
         # a min heap of edges, with Tanneal time difference as the priority value
         # and adding the operations to the list represented as singleton clusters
-        singleton_clusters = pcr_operations.map { |pcr_op| TannealCluster.singleton_cluster(pcr_op) }
+        singleton_clusters = @pcr_operations.map { |pcr_op| TannealCluster.singleton_cluster(pcr_op) }
         @adjacency_list = build_mst_adjacency_list(initial_graph, singleton_clusters)  #O(n^2)
     end
 
@@ -410,7 +413,6 @@ end
 # nearness of their Tanneal times
 #
 class TannealCluster
-    include GradientPcrHelpers
     include ClusterMethods
 
     attr_reader :size, :min_anneal, :max_anneal, :mean_anneal, :parent_clusters, :child_cluster, :pcr_operation

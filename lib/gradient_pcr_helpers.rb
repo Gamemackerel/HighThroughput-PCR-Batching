@@ -5,6 +5,7 @@
 #
 
 require 'priority_queue'
+require 'set'
 
 def assert(expr)
     raise "This is wrong" unless expr
