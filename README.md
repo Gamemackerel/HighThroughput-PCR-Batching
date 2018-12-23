@@ -1,9 +1,12 @@
 # High Throughput PCR Batching
 Ruby Gem which allows optimized batching of as many pcr operations as possible in a set amount of thermocyclers.
 
-To use: first instantiate a PcrBatcher with settings that are appropriate for your lab needs and thermocyclers. At the UW BIOFAB, we use the following settings.
+Install gem with `gem "pcr_batching", :git => "git://github.com:Gamemackerel/PCR-Batching.git"`
+
+To use: require pcr_batching, then instantiate a PcrBatcher with settings that are appropriate for your lab needs and thermocyclers. At the UW BIOFAB, we use the following settings.
 
 ```
+	require 'pcr_batching'
 	my_batcher = PcrBatcher.new(
 				cycler_count: 4,
 	            row_count: 8,
@@ -63,4 +66,4 @@ If that didn't make sense, lets break down our batching_result to see what this 
 
 From the values so far inspected from the hash returned by PcrBatcher, it seems that Pcr 1 and 2 should go in the same thermocycler using an extension time of 59.5; and within that thermocycler, PcrOperation 1 should be placed on a row close to 69 degrees C.
 
-There are many other useful methods for {TannealCluster} and {ExtensionCluster} objects.
+There are a few other useful methods for {TannealCluster} and {ExtensionCluster} objects that you can find in the yard generated documentation.
