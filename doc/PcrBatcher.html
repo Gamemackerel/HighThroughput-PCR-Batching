@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>
+  Class: PcrBatcher
+  
+    &mdash; Documentation by YARD 0.9.16
+  
+</title>
+
+  <link rel="stylesheet" href="css/style.css" type="text/css" charset="utf-8" />
+
+  <link rel="stylesheet" href="css/common.css" type="text/css" charset="utf-8" />
+
+<script type="text/javascript" charset="utf-8">
+  pathId = "PcrBatcher";
+  relpath = '';
+</script>
+
+
+  <script type="text/javascript" charset="utf-8" src="js/jquery.js"></script>
+
+  <script type="text/javascript" charset="utf-8" src="js/app.js"></script>
+
+
+  </head>
+  <body>
+    <div class="nav_wrap">
+      <iframe id="nav" src="class_list.html?1"></iframe>
+      <div id="resizer"></div>
+    </div>
+
+    <div id="main" tabindex="-1">
+      <div id="header">
+        <div id="menu">
+  
+    <a href="_index.html">Index (P)</a> &raquo;
+    
+    
+    <span class="title">PcrBatcher</span>
+  
+</div>
+
+        <div id="search">
+  
+    <a class="full_list_link" id="class_list_link"
+        href="class_list.html">
+
+        <svg width="24" height="24">
+          <rect x="0" y="4" width="24" height="4" rx="1" ry="1"></rect>
+          <rect x="0" y="12" width="24" height="4" rx="1" ry="1"></rect>
+          <rect x="0" y="20" width="24" height="4" rx="1" ry="1"></rect>
+        </svg>
+    </a>
+  
+</div>
+        <div class="clear"></div>
+      </div>
+
+      <div id="content"><h1>Class: PcrBatcher
+  
+  
+  
+</h1>
+<div class="box_info">
+  
+  <dl>
+    <dt>Inherits:</dt>
+    <dd>
+      <span class="inheritName">Object</span>
+      
+        <ul class="fullTree">
+          <li>Object</li>
+          
+            <li class="next">PcrBatcher</li>
+          
+        </ul>
+        <a href="#" class="inheritanceTree">show all</a>
+      
+    </dd>
+  </dl>
+  
+
+  
+  
+  
+  
+  
+
+  
+
+  
+  <dl>
+    <dt>Defined in:</dt>
+    <dd>lib/pcr_batching.rb</dd>
+  </dl>
+  
+</div>
+
+<h2>Overview</h2><div class="docstring">
+  <div class="discussion">
+    
+<p>Pcrbatcher uses a nearest neighbor chain algorithm to  batch pcr operations
+with their nearest neighbors by extension time until These groups are
+marked by the maximum extension they contain. Then, for each thermocycler
+group, the operations within that group are clustered again with a nearest
+neighbor chain algorithm by temperature,  that refuses to make temp groups
+of larger than @column_count until @row_count temp groups remain. each
+row-grouping is marked with its average temperature. range of temp gradient
+is determined by the highest and lowest temp groups. Groups are placed into
+the rows that have nearest temperature to their average, rounding up
+always.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+
+</div>
+
+
+
+
+
+
+  
+    <h2>
+      Instance Method Summary
+      <small><a href="#" class="summary_toggle">collapse</a></small>
+    </h2>
+
+    <ul class="summary">
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#add_pcr_operation-instance_method" title="#add_pcr_operation (instance method)">#<strong>add_pcr_operation</strong>(opts = {})  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Make a brand new pcr operation representation and add it to the list of pcr
+operations to be batched.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#batch-instance_method" title="#batch (instance method)">#<strong>batch</strong>(use_checkrep = false)  &#x21d2; Hash&lt;ExensionCluster, Set&lt;TannealCluster&gt;&gt; </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Batches @pcr_operations into @cycler_count reaction groups, and within each
+reaction group, batches operations into @row_count temperature groups.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#defaults-instance_method" title="#defaults (instance method)">#<strong>defaults</strong>  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Batching settings that work well for the UW BIOFAB PCR workflow which uses
+4 X thermocyclers.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#initialize-instance_method" title="#initialize (instance method)">#<strong>initialize</strong>(opts = {})  &#x21d2; PcrBatcher </a>
+    
+
+    
+  </span>
+  
+  
+    <span class="note title constructor">constructor</span>
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Initialize the important fields needed to batch some pcr operations.</p>
+</div></span>
+  
+</li>
+
+      
+    </ul>
+  
+
+<div id="constructor_details" class="method_details_list">
+  <h2>Constructor Details</h2>
+  
+    <div class="method_details first">
+  <h3 class="signature first" id="initialize-instance_method">
+  
+    #<strong>initialize</strong>(opts = {})  &#x21d2; <tt><span class='object_link'><a href="" title="PcrBatcher (class)">PcrBatcher</a></span></tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Initialize the important fields needed to batch some pcr operations.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>opts</span>
+      
+      
+        <span class='type'>(<tt>Hash</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>{}</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>initialization options, will use defaults when option is not supplied</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+  
+    
+    
+    <p class="tag_title">Options Hash (<tt>opts</tt>):</p>
+    <ul class="option">
+      
+        <li>
+          <span class="name">:cycler_count</span>
+          <span class="type">(<tt>Integer</tt>)</span>
+          <span class="default">
+            
+          </span>
+          
+            &mdash; <div class='inline'>
+<p>number of thermocyclers  available for batching</p>
+</div>
+          
+        </li>
+      
+        <li>
+          <span class="name">:row_count</span>
+          <span class="type">(<tt>Integer</tt>)</span>
+          <span class="default">
+            
+          </span>
+          
+            &mdash; <div class='inline'>
+<p>number of rows per thermocycler</p>
+</div>
+          
+        </li>
+      
+        <li>
+          <span class="name">:column_count</span>
+          <span class="type">(<tt>Integer</tt>)</span>
+          <span class="default">
+            
+          </span>
+          
+            &mdash; <div class='inline'>
+<p>number of columns per thermocycler</p>
+</div>
+          
+        </li>
+      
+        <li>
+          <span class="name">:temp_range</span>
+          <span class="type">(<tt>Float</tt>)</span>
+          <span class="default">
+            
+          </span>
+          
+            &mdash; <div class='inline'>
+<p>degree C allowable gradient temperature range in one thermocycler</p>
+</div>
+          
+        </li>
+      
+        <li>
+          <span class="name">:mand_ext_comb_diff</span>
+          <span class="type">(<tt>Float</tt>)</span>
+          <span class="default">
+            
+          </span>
+          
+            &mdash; <div class='inline'>
+<p>the mandatory extension combination difference at which pcr operations will
+be placed into the same thermocycler and use the same extension time, even
+if it will leave some thermocyclers open</p>
+</div>
+          
+        </li>
+      
+        <li>
+          <span class="name">:max_ext_comb_diff</span>
+          <span class="type">(<tt>Float</tt>)</span>
+          <span class="default">
+            
+          </span>
+          
+            &mdash; <div class='inline'>
+<p>the extension difference at which pcr operations will be disallowed from
+being  placed into the same thermocycler and using the same  extension
+time, even if there will be more pcr batches than thermocyclers</p>
+</div>
+          
+        </li>
+      
+        <li>
+          <span class="name">:mand_tanneal_comb_diff</span>
+          <span class="type">(<tt>Float</tt>)</span>
+          <span class="default">
+            
+          </span>
+          
+            &mdash; <div class='inline'>
+<p>the mandatory tanneal combination difference at which pcr operations will
+be placed into the same thermocycler row, even that means some rows of the
+thermocylcer will be empty</p>
+</div>
+          
+        </li>
+      
+        <li>
+          <span class="name">:max_tanneal_comb_diff</span>
+          <span class="type">(<tt>Float</tt>)</span>
+          <span class="default">
+            
+          </span>
+          
+            &mdash; <div class='inline'>
+<p>the tanneal difference at which pcr operations will be disallowed from
+being grouped into the same thermocycler row</p>
+</div>
+          
+        </li>
+      
+    </ul>
+  
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/pcr_batching.rb', line 45</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_initialize'>initialize</span> <span class='id identifier rubyid_opts'>opts</span> <span class='op'>=</span> <span class='lbrace'>{</span><span class='rbrace'>}</span>
+    <span class='id identifier rubyid_opts'>opts</span> <span class='op'>=</span> <span class='id identifier rubyid_defaults'>defaults</span><span class='period'>.</span><span class='id identifier rubyid_merge'>merge</span> <span class='id identifier rubyid_opts'>opts</span>
+    <span class='ivar'>@cycler_count</span>           <span class='op'>=</span> <span class='id identifier rubyid_opts'>opts</span><span class='lbracket'>[</span><span class='symbol'>:cycler_count</span><span class='rbracket'>]</span>
+    <span class='ivar'>@row_count</span>              <span class='op'>=</span> <span class='id identifier rubyid_opts'>opts</span><span class='lbracket'>[</span><span class='symbol'>:row_count</span><span class='rbracket'>]</span>
+    <span class='ivar'>@column_count</span>           <span class='op'>=</span> <span class='id identifier rubyid_opts'>opts</span><span class='lbracket'>[</span><span class='symbol'>:column_count</span><span class='rbracket'>]</span>
+    <span class='ivar'>@temp_range</span>             <span class='op'>=</span> <span class='id identifier rubyid_opts'>opts</span><span class='lbracket'>[</span><span class='symbol'>:temp_range</span><span class='rbracket'>]</span>
+    <span class='ivar'>@mand_ext_comb_diff</span>     <span class='op'>=</span> <span class='id identifier rubyid_opts'>opts</span><span class='lbracket'>[</span><span class='symbol'>:mand_ext_comb_diff</span><span class='rbracket'>]</span>
+    <span class='ivar'>@mand_tanneal_comb_diff</span> <span class='op'>=</span> <span class='id identifier rubyid_opts'>opts</span><span class='lbracket'>[</span><span class='symbol'>:mand_tanneal_comb_diff</span><span class='rbracket'>]</span>
+    <span class='ivar'>@max_ext_comb_diff</span>      <span class='op'>=</span> <span class='id identifier rubyid_opts'>opts</span><span class='lbracket'>[</span><span class='symbol'>:max_ext_comb_diff</span><span class='rbracket'>]</span>
+    <span class='ivar'>@max_tanneal_comb_diff</span>  <span class='op'>=</span> <span class='id identifier rubyid_opts'>opts</span><span class='lbracket'>[</span><span class='symbol'>:max_tanneal_comb_diff</span><span class='rbracket'>]</span>
+    <span class='ivar'>@pcr_operations</span>         <span class='op'>=</span> <span class='lbracket'>[</span><span class='rbracket'>]</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+  
+</div>
+
+
+  <div id="instance_method_details" class="method_details_list">
+    <h2>Instance Method Details</h2>
+
+    
+      <div class="method_details first">
+  <h3 class="signature first" id="add_pcr_operation-instance_method">
+  
+    #<strong>add_pcr_operation</strong>(opts = {})  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Make a brand new pcr operation representation and add it to the list of pcr
+operations to be batched.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>opts</span>
+      
+      
+        <span class='type'>(<tt>Hash</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>{}</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>pcr operation definition options</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+  
+    
+    
+    <p class="tag_title">Options Hash (<tt>opts</tt>):</p>
+    <ul class="option">
+      
+        <li>
+          <span class="name">:extension_time</span>
+          <span class="type">(<tt>Float</tt>)</span>
+          <span class="default">
+            
+          </span>
+          
+            &mdash; <div class='inline'>
+<p>extension time for this pcr operation</p>
+</div>
+          
+        </li>
+      
+        <li>
+          <span class="name">:anneal_temp</span>
+          <span class="type">(<tt>Float</tt>)</span>
+          <span class="default">
+            
+          </span>
+          
+            &mdash; <div class='inline'>
+<p>the annealing temperature for this pcr operation</p>
+</div>
+          
+        </li>
+      
+        <li>
+          <span class="name">:extension_group</span>
+          <span class="type">(<tt>Integer</tt>)</span>
+          <span class="default">
+            
+          </span>
+          
+            &mdash; <div class='inline'>
+<p>a group id for this operation, shared with other pcr operations who could
+be run together in a reaction with the same extension time</p>
+</div>
+          
+        </li>
+      
+        <li>
+          <span class="name">:tanneal_group</span>
+          <span class="type">(<tt>Integer</tt>)</span>
+          <span class="default">
+            
+          </span>
+          
+            &mdash; <div class='inline'>
+<p>a group id for this operation, shared with other pcr operations who could
+be run together</p>
+
+<pre class="code ruby"><code class="ruby">in a reaction with the same annealing temperature</code></pre>
+</div>
+          
+        </li>
+      
+        <li>
+          <span class="name">:unique_id</span>
+          <span class="type">(<tt>Integer</tt>)</span>
+          <span class="default">
+            
+          </span>
+          
+            &mdash; <div class='inline'>
+<p>identifier to track a pcr operation through its being batched</p>
+</div>
+          
+        </li>
+      
+    </ul>
+  
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+89
+90
+91
+92
+93
+94
+95</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/pcr_batching.rb', line 89</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_add_pcr_operation'>add_pcr_operation</span> <span class='id identifier rubyid_opts'>opts</span> <span class='op'>=</span> <span class='lbrace'>{</span><span class='rbrace'>}</span>
+    <span class='ivar'>@pcr_operations</span> <span class='op'>&lt;&lt;</span> <span class='const'><span class='object_link'><a href="PcrOperation.html" title="PcrOperation (class)">PcrOperation</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="PcrOperation.html#initialize-instance_method" title="PcrOperation#initialize (method)">new</a></span></span><span class='lparen'>(</span>
+        <span class='label'>extension_time:</span>  <span class='id identifier rubyid_opts'>opts</span><span class='lbracket'>[</span><span class='symbol'>:extension_time</span><span class='rbracket'>]</span><span class='comma'>,</span>
+        <span class='label'>anneal_temp:</span>     <span class='id identifier rubyid_opts'>opts</span><span class='lbracket'>[</span><span class='symbol'>:anneal_temp</span><span class='rbracket'>]</span><span class='comma'>,</span>
+        <span class='label'>unique_id:</span>       <span class='id identifier rubyid_opts'>opts</span><span class='lbracket'>[</span><span class='symbol'>:unique_id</span><span class='rbracket'>]</span><span class='comma'>,</span>
+    <span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="batch-instance_method">
+  
+    #<strong>batch</strong>(use_checkrep = false)  &#x21d2; <tt>Hash&lt;ExensionCluster, Set&lt;<span class='object_link'><a href="TannealCluster.html" title="TannealCluster (class)">TannealCluster</a></span>&gt;&gt;</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Batches @pcr_operations into @cycler_count reaction groups, and within each
+reaction group, batches operations into @row_count temperature groups.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>checkrep</span>
+      
+      
+        <span class='type'>(<tt>Boolean</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>whether or not to check representation invariants during clustering; very
+slow and only necessary while testing</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>Hash&lt;ExensionCluster, Set&lt;<span class='object_link'><a href="TannealCluster.html" title="TannealCluster (class)">TannealCluster</a></span>&gt;&gt;</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>a mapping from  a group of pcr operations with similar extension time to
+the set of</p>
+
+<p>sub-groups of that group which have similar anneal temperature.</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/pcr_batching.rb', line 106</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_batch'>batch</span><span class='lparen'>(</span><span class='id identifier rubyid_use_checkrep'>use_checkrep</span> <span class='op'>=</span> <span class='kw'>false</span><span class='rparen'>)</span>
+    <span class='id identifier rubyid_extension_cluster_to_tanneal_clusters'>extension_cluster_to_tanneal_clusters</span> <span class='op'>=</span> <span class='const'>Hash</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span>
+
+    <span class='id identifier rubyid_extension_graph'>extension_graph</span> <span class='op'>=</span> <span class='const'>ExtensionClusterGraph</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span>
+                <span class='label'>pcr_operations:</span>               <span class='ivar'>@pcr_operations</span><span class='comma'>,</span>
+                <span class='label'>thermocycler_quantity:</span>        <span class='ivar'>@cycler_count</span><span class='comma'>,</span>
+                <span class='label'>thermocycler_rows:</span>            <span class='ivar'>@row_count</span><span class='comma'>,</span>
+                <span class='label'>thermocycler_columns:</span>         <span class='ivar'>@column_count</span><span class='comma'>,</span>
+                <span class='label'>thermocycler_temp_range:</span>      <span class='ivar'>@temp_range</span><span class='comma'>,</span>
+                <span class='label'>force_combination_distance:</span>   <span class='ivar'>@mand_ext_comb_diff</span><span class='comma'>,</span>
+                <span class='label'>prevent_combination_distance:</span> <span class='ivar'>@max_ext_comb_diff</span>
+            <span class='rparen'>)</span> <span class='comment'># O(n^2)
+</span>
+    <span class='id identifier rubyid_extension_clusters'>extension_clusters</span> <span class='op'>=</span> <span class='id identifier rubyid_extension_graph'>extension_graph</span><span class='period'>.</span><span class='id identifier rubyid_perform_clustering'>perform_clustering</span> <span class='id identifier rubyid_use_checkrep'>use_checkrep</span> <span class='comment'># O(n^2)
+</span>    <span class='id identifier rubyid_extension_clusters'>extension_clusters</span><span class='period'>.</span><span class='id identifier rubyid_each'>each</span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_extension_cluster'>extension_cluster</span><span class='op'>|</span> <span class='comment'># m clusters =&gt;  O(m) 
+</span>        <span class='id identifier rubyid_tanneal_graph'>tanneal_graph</span> <span class='op'>=</span> <span class='const'>TannealClusterGraph</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span>  <span class='comment'># q pcr operations per cluster =&gt; O(q^2) 
+</span>                    <span class='label'>pcr_operations:</span>               <span class='id identifier rubyid_extension_cluster'>extension_cluster</span><span class='period'>.</span><span class='id identifier rubyid_members'>members</span><span class='comma'>,</span>
+                    <span class='label'>thermocycler_rows:</span>            <span class='ivar'>@row_count</span><span class='comma'>,</span>
+                    <span class='label'>thermocycler_columns:</span>         <span class='ivar'>@column_count</span><span class='comma'>,</span>
+                    <span class='label'>force_combination_distance:</span>   <span class='ivar'>@mand_tanneal_comb_diff</span><span class='comma'>,</span>
+                    <span class='label'>prevent_combination_distance:</span> <span class='ivar'>@max_tanneal_comb_diff</span>
+                <span class='rparen'>)</span>
+
+        <span class='id identifier rubyid_tanneal_clusters'>tanneal_clusters</span> <span class='op'>=</span> <span class='id identifier rubyid_tanneal_graph'>tanneal_graph</span><span class='period'>.</span><span class='id identifier rubyid_perform_clustering'>perform_clustering</span> <span class='id identifier rubyid_use_checkrep'>use_checkrep</span> <span class='comment'>#O(q^2)
+</span>        <span class='id identifier rubyid_extension_cluster_to_tanneal_clusters'>extension_cluster_to_tanneal_clusters</span><span class='lbracket'>[</span><span class='id identifier rubyid_extension_cluster'>extension_cluster</span><span class='rbracket'>]</span> <span class='op'>=</span> <span class='id identifier rubyid_tanneal_clusters'>tanneal_clusters</span>
+    <span class='kw'>end</span> <span class='comment'># m * q = n =&gt; O(2 * n^2) 
+</span>
+    <span class='id identifier rubyid_extension_cluster_to_tanneal_clusters'>extension_cluster_to_tanneal_clusters</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="defaults-instance_method">
+  
+    #<strong>defaults</strong>  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Batching settings that work well for the UW BIOFAB PCR workflow which uses
+4 X thermocyclers</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/pcr_batching.rb', line 60</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_defaults'>defaults</span>
+    <span class='lbrace'>{</span>
+        <span class='label'>cycler_count:</span> <span class='int'>4</span><span class='comma'>,</span>
+        <span class='label'>row_count:</span> <span class='int'>8</span><span class='comma'>,</span>
+        <span class='label'>column_count:</span> <span class='int'>12</span><span class='comma'>,</span>
+        <span class='label'>temp_range:</span> <span class='int'>17</span><span class='comma'>,</span>
+        <span class='label'>mand_ext_comb_diff:</span> <span class='float'>30.0</span><span class='comma'>,</span>
+        <span class='label'>mand_tanneal_comb_diff:</span> <span class='float'>0.3</span><span class='comma'>,</span>
+        <span class='label'>max_ext_comb_diff:</span> <span class='float'>300.0</span><span class='comma'>,</span>
+        <span class='label'>max_tanneal_comb_diff:</span> <span class='float'>3.0</span><span class='comma'>,</span>
+    <span class='rbrace'>}</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+  </div>
+
+</div>
+
+      <div id="footer">
+  Generated on Sat Dec 22 16:45:19 2018 by
+  <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
+  0.9.16 (ruby-2.3.7).
+</div>
+
+    </div>
+  </body>
+</html>
