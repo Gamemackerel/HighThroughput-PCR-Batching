@@ -145,7 +145,6 @@ module ClusterMethods
     # @return [Array<PcrOperation>] list of PcrOperations
     def members
         # calculate members when needed
-        # lazy approach, so we dont have to keep track of the member_list for each cluster 
         if @parent_clusters.nil?
             return [@pcr_operation]
         else

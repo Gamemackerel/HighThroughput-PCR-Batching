@@ -100,7 +100,7 @@ class PcrBatcher
     # 
     # @param checkrep [Boolean]  whether or not to check representation invariants
     #               during clustering; very slow and only necessary while testing
-    # @return [Hash<ExensionCluster, Set<TannealCluster>>]  a mapping from 
+    # @return [Hash<ExtensionCluster, Set<TannealCluster>>]  a mapping from 
     #               a group of pcr operations with similar extension time to the set of  
     #               sub-groups of that group which have similar anneal temperature. 
     def batch(use_checkrep = false)

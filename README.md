@@ -19,7 +19,7 @@ To use: require pcr_batching, then instantiate a PcrBatcher with settings that a
             )
 ```
 
-To learn more about these settings, see the initialize method in {PcrBatcher}
+To learn more about these settings, see the [initialize method in PcrBatcher](https://gamemackerel.github.io/PCR-Batching/doc/PcrBatcher.html#initialize-instance_method)
 
 Next, give the PcrBatcher information about each PCR reaction you would like to run using add_pcr_operation. Let's say we need to run 3 reactions at once, two of which have a very similar extension time requirement.
 
@@ -66,6 +66,6 @@ If that didn't make sense, let's break down our batching_result to see what this
 
 From the values so far inspected from the hash returned by PcrBatcher, it seems that Pcr 1 and 2 should go in the same thermocycler using an extension time of 59.5 seconds; and within that thermocycler, PcrOperation 1 should be placed on a row close to 69 degrees C.
 
-There are other useful methods for {TannealCluster} and {ExtensionCluster} that you can find in the [yard generated documentation](https://gamemackerel.github.io/PCR-Batching/doc).
+[View other useful methods in the yard generated documentation](https://gamemackerel.github.io/PCR-Batching/doc).
 
 [Source code available on github](https://github.com/Gamemackerel/PCR-Batching)
