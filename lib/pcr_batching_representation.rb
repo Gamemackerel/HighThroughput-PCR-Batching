@@ -2,7 +2,7 @@
 # and Graphs of Pcr operation Clusters
 #
 
-require './lib/pcr_batching_helpers'
+require 'pcr_batching_helpers'
 
 # Object representation for an individual pcr reaction.
 # PcrOperation keeps track of all the necessary factors

@@ -1,5 +1,5 @@
-require './lib/pcr_batching_representation'
-require './lib/pcr_batching_helpers'
+require 'pcr_batching_representation'
+require 'pcr_batching_helpers'
 
 # Pcrbatcher uses a nearest neighbor chain algorithm to 
 # batch pcr operations with their nearest neighbors by extension time until

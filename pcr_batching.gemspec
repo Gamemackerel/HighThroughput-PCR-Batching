@@ -7,9 +7,10 @@ Gem::Specification.new do |s|
   s.authors     = ["Abraham Miller"]
   s.email       = 'abemill@uw.eu'
   require 'rake'
-  s.files = FileList[ 'lib     .rb',
-                      '[A-Z]*',
-                      'test/   *'].to_a
+  s.files = FileList[ 'lib/*',
+                      'doc/*',
+                      '*',
+                      'test/*'].to_a
   s.homepage    =
     'http://rubygems.org/gems/pcr-batching'
   s.license       = 'MIT'

@@ -1,5 +1,5 @@
 require 'test/unit'
-require './lib/pcr_batching'
+require 'pcr_batching'
 
 ##################### SETTING UP TESTS ####################
 #### TEST 1
