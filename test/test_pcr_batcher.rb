@@ -92,7 +92,9 @@ group4 = [
                 unique_id:          13,
             }
         ]
-test_2.add_many_pcr_operations(group1 + group2 + group3 + group4)
+(group1 + group2 + group3 + group4).each do |pcr_definition|
+    test_2.add_pcr_operation(pcr_definition)
+end
 
 #### TEST 3 
 # larger test with random stuff, but output not rigorously inspected (checkrep still active)

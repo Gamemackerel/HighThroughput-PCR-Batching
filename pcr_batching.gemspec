@@ -1,5 +1,5 @@
 Gem::Specification.new do |s|
-  s.name        = 'pcr-batching'
+  s.name        = 'pcr_batching'
   s.version     = '0.0.0'
   s.date        = '2018-12-22'
   s.summary     = "Smart Gradient Polymerase Chain Reaction batching"

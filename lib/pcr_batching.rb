@@ -1,7 +1,7 @@
 require './lib/pcr_batching_representation'
 require './lib/pcr_batching_helpers'
 
-# Smart Pcr batcher which uses a nearest neighbor chain algorithm to 
+# Pcrbatcher uses a nearest neighbor chain algorithm to 
 # batch pcr operations with their nearest neighbors by extension time until
 # @cycler_count groups remain. 
 # These groups are marked by the maximum extension they contain.
@@ -17,7 +17,8 @@ require './lib/pcr_batching_helpers'
 class PcrBatcher
 
     # Initialize the important fields needed to batch some pcr operations.
-    # @param opts [Hash]  initialization options
+    # @param opts [Hash]  initialization options, will use defaults when option
+    #                   is not supplied
     # @option opts [Integer] :cycler_count  number of thermocyclers 
     #                   available for batching
     # @option opts [Integer] :row_count  number of rows per thermocycler
@@ -41,8 +42,6 @@ class PcrBatcher
     # @option opts [Float] :max_tanneal_comb_diff  the tanneal difference at
     #                   which pcr operations will be disallowed from being
     #                   grouped into the same thermocycler row
-    # @option opts [Array<PcrOperation>] :pcr_operations  list of operations 
-    #                   to find a batching for
     def initialize opts = {}
         opts = defaults.merge opts
         @cycler_count           = opts[:cycler_count]
@@ -53,7 +52,7 @@ class PcrBatcher
         @mand_tanneal_comb_diff = opts[:mand_tanneal_comb_diff]
         @max_ext_comb_diff      = opts[:max_ext_comb_diff]
         @max_tanneal_comb_diff  = opts[:max_tanneal_comb_diff]
-        @pcr_operations         = opts[:pcr_operations] || []
+        @pcr_operations         = []
     end
 
     # Batching settings that work well for the UW BIOFAB PCR workflow
@@ -68,7 +67,6 @@ class PcrBatcher
             mand_tanneal_comb_diff: 0.3,
             max_ext_comb_diff: 300.0,
             max_tanneal_comb_diff: 3.0,
-            pcr_operations: [],
         }
     end
 
@@ -94,10 +92,6 @@ class PcrBatcher
             anneal_temp:     opts[:anneal_temp],
             unique_id:       opts[:unique_id],
         )
-    end
-
-    def add_many_pcr_operations operations
-        operations.each { |op| add_pcr_operation op }
     end
 
     # Batches @pcr_operations into @cycler_count

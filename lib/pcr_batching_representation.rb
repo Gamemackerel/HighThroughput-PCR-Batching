@@ -61,7 +61,7 @@ end
 # Core clustering logic that is used for both ExtensionClusterGraph and TannealClusterGraph to group
 # a set of objects based on the relative proximity of their fields
 #
-#   representation invariants of cluster graphs:
+# representation invariants of cluster graphs:
 #   initial size of pcr_operations == clusters.map { members }.flatten.size
 #   Set(pcr_operations) == Set(clusters.map { members }.flatten)
 #   pcr operations belong to exactly 1 cluster
@@ -137,9 +137,12 @@ end
 # Methods that are useful for both Tanneal clusters or Extension time clusters
 #
 module ClusterMethods
-    # calculate members when needed
-    # lazy approach, so we dont have to keep track of the member_list for each cluster 
+    # Get all PcrOperations which are in this cluster
+    #
+    # @return [Array<PcrOperation>] list of PcrOperations
     def members
+        # calculate members when needed
+        # lazy approach, so we dont have to keep track of the member_list for each cluster 
         if @parent_clusters.nil?
             return [@pcr_operation]
         else
@@ -304,18 +307,6 @@ class ExtensionCluster
         other.child_cluster = super_cluster
 
         super_cluster
-    end
-
-    # calculate members when needed
-    # lazy approach, so we dont have to keep track of the member_list for each cluster
-    # TODO: make dynamic so members only recursively calculates the first time, and then stores
-    # its members list for future calls
-    def members
-        if @parent_clusters.nil?
-            return [@pcr_operation]
-        else
-            return @parent_clusters[0].members.concat(@parent_clusters[1].members)
-        end
     end
 
     def get_containing_supercluster
