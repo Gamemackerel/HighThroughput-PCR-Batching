@@ -64,6 +64,8 @@ If that didn't make sense, let's break down our batching_result to see what this
     g1_value.first.members #=> [PcrOperation<@unique_id: 1>]
 ```
 
-From the values so far inspected from the hash returned by PcrBatcher, it seems that Pcr 1 and 2 should go in the same thermocycler using an extension time of 59.5; and within that thermocycler, PcrOperation 1 should be placed on a row close to 69 degrees C.
+From the values so far inspected from the hash returned by PcrBatcher, it seems that Pcr 1 and 2 should go in the same thermocycler using an extension time of 59.5 seconds; and within that thermocycler, PcrOperation 1 should be placed on a row close to 69 degrees C.
 
-There are a few other useful methods for {TannealCluster} and {ExtensionCluster} objects that you can find in the yard generated documentation.
+There are a few other useful methods for {TannealCluster} and {ExtensionCluster} objects that you can find in the [yard generated documentation](https://gamemackerel.github.io/PCR-Batching/).
+
+[Source code available on github](https://github.com/Gamemackerel/PCR-Batching)
