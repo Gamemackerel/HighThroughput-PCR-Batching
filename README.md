@@ -53,15 +53,14 @@ The result of the batching is a map from extension time group to a list of annea
 If that didn't make sense, let's break down our batching_result to see what this looks like in practice.
 
 ```
-    g1_key, g1_value = batching_result.first
-    g2_key, g2_value = batching_result.last
+    key, value = batching_result.first
 
-    g1_key #=> ExtensionCluster<@size: 2>
-    g1_key.mean_extension #=> 59.5
-    g1_key.members #=> [PcrOperation<@unique_id: 1>, PcrOperation<@unique_id: 2>]
-    g1_value #=> [TannealCluster<@size: 1>, TannealCluster<@size: 1>]
-    g1_value.first.mean_anneal #=> 69
-    g1_value.first.members #=> [PcrOperation<@unique_id: 1>]
+    key #=> ExtensionCluster<@size: 2>
+    key.mean_extension #=> 59.5
+    key.members #=> [PcrOperation<@unique_id: 1>, PcrOperation<@unique_id: 2>]
+    value #=> [TannealCluster<@size: 1>, TannealCluster<@size: 1>]
+    value.first.mean_anneal #=> 69
+    value.first.members #=> [PcrOperation<@unique_id: 1>]
 ```
 
 From the values so far inspected from the hash returned by PcrBatcher, it seems that Pcr 1 and 2 should go in the same thermocycler using an extension time of 59.5 seconds; and within that thermocycler, PcrOperation 1 should be placed on a row close to 69 degrees C.
