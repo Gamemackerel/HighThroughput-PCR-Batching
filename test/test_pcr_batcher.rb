@@ -123,4 +123,4 @@ test_2_actual_pcr_groupings = test_2_result.keys.map { |e| e.members.sort {|a,b|
 test_2_intended_pcr_groupings = [[1,2,3],[4,5,6,7],[8,9,10,11],[12,13]]
 assert test_2_actual_pcr_groupings.sort == test_2_intended_pcr_groupings.sort
 
-
+puts "Tests Succeeded"

@@ -1,5 +1,5 @@
 # High Throughput PCR Batching
-Gem which allows optimized batching of as many pcr operations as possible in a set amount of thermocyclers.
+Ruby Gem which allows optimized batching of as many pcr operations as possible in a set amount of thermocyclers.
 
 To use: first instantiate a PcrBatcher with settings that are appropriate for your lab needs and thermocyclers. At the UW BIOFAB, we use the following settings.
 
@@ -16,7 +16,7 @@ To use: first instantiate a PcrBatcher with settings that are appropriate for yo
             )
 ```
 
-To learn more about these settings, see (PcrBatcher.initialize)[./PcrBatcher.html]
+To learn more about these settings, see the initialize method in {PcrBatcher}
 
 Next, give the PcrBatcher information about each PCR reaction you would like to run using add_pcr_operation. Let's say we need to run 3 reactions at once, two of which have a very similar extension time requirement.
 
@@ -38,7 +38,7 @@ Next, give the PcrBatcher information about each PCR reaction you would like to 
             )
 ```
 
-Finally, we can let the batcher organize these into space efficient groupings. With 4 open thermocyclers and only 3 reactions, this shouldn't be too much trouble
+Finally, we can let the batcher organize these into space efficient groupings. With 4 open thermocyclers and only 3 reactions, this shouldn't be too much trouble.
 
 ```
 	batching_result = my_batcher.batch
@@ -63,4 +63,4 @@ If that didn't make sense, lets break down our batching_result to see what this 
 
 From the values so far inspected from the hash returned by PcrBatcher, it seems that Pcr 1 and 2 should go in the same thermocycler using an extension time of 59.5; and within that thermocycler, PcrOperation 1 should be placed on a row close to 69 degrees C.
 
-Visit (PcrClustering)[./PcrClustering.html] to see all methods available for TannealCluster and ExtensionCluster objects.
+There are many other useful methods for {TannealCluster} and {ExtensionCluster} objects.

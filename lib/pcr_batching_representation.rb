@@ -4,7 +4,6 @@
 
 require './lib/pcr_batching_helpers'
 
-
 # Object representation for an individual pcr reaction.
 # PcrOperation keeps track of all the necessary factors
 # for a pcr.
@@ -38,6 +37,7 @@ class PcrOperation
         end
     end
 
+    # @private
     # get an exact copy of this pcr operation
     def clone
         PcrOperation.new(
@@ -49,15 +49,18 @@ class PcrOperation
         )
     end
 
+    # @private
     def <=> other
         unique_id <=> other.unique_id
     end
+
 
     def to_s 
         "extension_time: #{@extension_time} + \n anneal_temp: #{@anneal_temp} + \n extension_group: #{@extension_group} + \n tanneal_group: #{@tanneal_group}"
     end
 end
 
+# @private
 # Core clustering logic that is used for both ExtensionClusterGraph and TannealClusterGraph to group
 # a set of objects based on the relative proximity of their fields
 #
@@ -150,10 +153,12 @@ module ClusterMethods
         end
     end
 
+    # @private
     def combine_anneal_range_with(other)
         combine_range(self.max_anneal, self.min_anneal, other.max_anneal, other.min_anneal)
     end
 
+    # @private
     def get_containing_supercluster
         if @child_cluster.nil?
             return self
@@ -163,6 +168,7 @@ module ClusterMethods
     end
 end
 
+# @private
 # A set of clusters of pcr_operations.
 # the clusters will be made by the proximity of extension
 # time, so that multiple pcr_operations can be optimally
@@ -256,9 +262,12 @@ end
 class ExtensionCluster
     include ClusterMethods
 
-    attr_reader :size, :min_extension, :max_extension, :mean_extension, :max_anneal, :min_anneal, :parent_clusters, :child_cluster, :pcr_operation
-    attr_writer :child_cluster
+    attr_reader :size, :min_extension, :max_extension, :mean_extension, :max_anneal, :min_anneal
 
+    # @private
+    attr_accessor :child_cluster
+
+    # @private
     def initialize(opts)
         @size    = opts[:size]
         @min_extension   = opts[:min_extension]
@@ -271,6 +280,7 @@ class ExtensionCluster
         @pcr_operation   = opts[:pcr_operation]
     end
 
+    # @private
     def self.singleton_cluster(pcr_operation)
         ext = pcr_operation.extension_time
         anneal = pcr_operation.anneal_temp
@@ -285,10 +295,12 @@ class ExtensionCluster
             )
     end
 
+    # @private
     def combine_extension_range_with(other)
         combine_range(self.max_extension, self.min_extension, other.max_extension, other.min_extension)
     end
 
+    # @private
     def combine_with(other)
         combined_size = self.size + other.size
         combined_min = min(self.min_extension, other.min_extension)
@@ -309,19 +321,12 @@ class ExtensionCluster
         super_cluster
     end
 
-    def get_containing_supercluster
-        if @child_cluster.nil?
-            return self
-        else
-            return @child_cluster.get_containing_supercluster
-        end
-    end
-
     def to_s
         "size: #{@size} \n extension range: #{min_extension}-#{max_extension} \n anneal range: #{min_anneal}-#{max_anneal} \n"
     end
 end
 
+# @private
 # A set of clusters of pcr_operations.
 # the clusters will be made by the proximity of Annealling temperature
 # so that multiple pcr_operations can be optimally
@@ -406,9 +411,12 @@ end
 class TannealCluster
     include ClusterMethods
 
-    attr_reader :size, :min_anneal, :max_anneal, :mean_anneal, :parent_clusters, :child_cluster, :pcr_operation
-    attr_writer :child_cluster
+    attr_reader :size, :min_anneal, :max_anneal, :mean_anneal, :parent_clusters
 
+    # @private    
+    attr_accessor :child_cluster
+
+    # @private
     def initialize(opts)
         @size            = opts[:size]
         @min_anneal      = opts[:min_anneal]
@@ -419,6 +427,7 @@ class TannealCluster
         @pcr_operation   = opts[:pcr_operation]
     end
 
+    # @private
     def self.singleton_cluster(pcr_operation)
         anneal = pcr_operation.anneal_temp
         TannealCluster.new(
@@ -430,6 +439,7 @@ class TannealCluster
             )
     end
 
+    # @private
     def combine_with(other)
         combined_size = self.size + other.size
         combined_min = min(self.min_anneal, other.min_anneal)
