@@ -3,7 +3,7 @@ require 'pcr_batching_helpers'
 
 # Pcrbatcher uses a nearest neighbor chain algorithm to 
 # batch pcr operations with their nearest neighbors by extension time until
-# @cycler_count groups remain. 
+# cycler_count groups remain. 
 # These groups are marked by the maximum extension they contain.
 # Then, for each thermocycler group, the operations within that group
 # are clustered again with a nearest neighbor chain algorithm by temperature, 
@@ -94,11 +94,11 @@ class PcrBatcher
         )
     end
 
-    # Batches @pcr_operations into @cycler_count
+    # Batches pcr_operations into cycler_count
     # reaction groups, and within each reaction group, batches operations
     # into @row_count temperature groups.
     # 
-    # @param checkrep [Boolean]  whether or not to check representation invariants
+    # @param use_checkrep [Boolean]  whether or not to check representation invariants
     #               during clustering; very slow and only necessary while testing
     # @return [Hash<ExtensionCluster, Set<TannealCluster>>]  a mapping from 
     #               a group of pcr operations with similar extension time to the set of  

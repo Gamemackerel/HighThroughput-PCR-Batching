@@ -103,15 +103,15 @@
   <div class="discussion">
     
 <p>Pcrbatcher uses a nearest neighbor chain algorithm to  batch pcr operations
-with their nearest neighbors by extension time until These groups are
-marked by the maximum extension they contain. Then, for each thermocycler
-group, the operations within that group are clustered again with a nearest
-neighbor chain algorithm by temperature,  that refuses to make temp groups
-of larger than @column_count until @row_count temp groups remain. each
-row-grouping is marked with its average temperature. range of temp gradient
-is determined by the highest and lowest temp groups. Groups are placed into
-the rows that have nearest temperature to their average, rounding up
-always.</p>
+with their nearest neighbors by extension time until cycler_count groups
+remain.  These groups are marked by the maximum extension they contain.
+Then, for each thermocycler group, the operations within that group are
+clustered again with a nearest neighbor chain algorithm by temperature, 
+that refuses to make temp groups of larger than @column_count until
+@row_count temp groups remain. each row-grouping is marked with its average
+temperature. range of temp gradient is determined by the highest and lowest
+temp groups. Groups are placed into the rows that have nearest temperature
+to their average, rounding up always.</p>
 
 
   </div>
@@ -177,7 +177,7 @@ operations to be batched.</p>
 
   
     <span class="summary_desc"><div class='inline'>
-<p>Batches @pcr_operations into @cycler_count reaction groups, and within each
+<p>Batches pcr_operations into cycler_count reaction groups, and within each
 reaction group, batches operations into @row_count temperature groups.</p>
 </div></span>
   
@@ -612,7 +612,7 @@ be run together</p>
 </h3><div class="docstring">
   <div class="discussion">
     
-<p>Batches @pcr_operations into @cycler_count reaction groups, and within each
+<p>Batches pcr_operations into cycler_count reaction groups, and within each
 reaction group, batches operations into @row_count temperature groups.</p>
 
 
@@ -624,11 +624,13 @@ reaction group, batches operations into @row_count temperature groups.</p>
   
     <li>
       
-        <span class='name'>checkrep</span>
+        <span class='name'>use_checkrep</span>
       
       
         <span class='type'>(<tt>Boolean</tt>)</span>
       
+      
+        <em class="default">(defaults to: <tt>false</tt>)</em>
       
       
         &mdash;
