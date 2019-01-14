@@ -199,15 +199,13 @@ clusters</p>
 150
 151
 152
-153
-154</pre>
+153</pre>
     </td>
     <td>
       <pre class="code"><span class="info file"># File 'lib/pcr_batching_representation.rb', line 146</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_members'>members</span>
     <span class='comment'># calculate members when needed
-</span>    <span class='comment'># lazy approach, so we dont have to keep track of the member_list for each cluster 
 </span>    <span class='kw'>if</span> <span class='ivar'>@parent_clusters</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
         <span class='kw'>return</span> <span class='lbracket'>[</span><span class='ivar'>@pcr_operation</span><span class='rbracket'>]</span>
     <span class='kw'>else</span>

@@ -57,13 +57,13 @@
         <div class="clear"></div>
       </div>
 
-      <div id="content"><div id='filecontents'><h1>High Throughput PCR Batching</h1>
+      <div id="content"><div id='filecontents'><h2>High Throughput PCR Batching</h2>
 
 <p>Ruby Gem which allows optimized batching of as many pcr operations as possible in a set amount of thermocyclers.</p>
 
 <p>Install gem with <code>gem &quot;pcr_batching&quot;, :git =&gt; &quot;git://github.com:Gamemackerel/PCR-Batching.git&quot;</code></p>
 
-<p>To use: require pcr_batching, then instantiate a PcrBatcher with settings that are appropriate for your lab needs and thermocyclers. At the UW BIOFAB, we use the following settings.</p>
+<p>To use: require pcr_batching, then instantiate a PcrBatcher with settings that are appropriate for your lab needs and thermocyclers.</p>
 
 <pre class="code ruby"><code class="ruby">    <span class='id identifier rubyid_require'>require</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>pcr_batching</span><span class='tstring_end'>&#39;</span></span>
     <span class='id identifier rubyid_my_batcher'>my_batcher</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="PcrBatcher.html" title="PcrBatcher (class)">PcrBatcher</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="PcrBatcher.html#initialize-instance_method" title="PcrBatcher#initialize (method)">new</a></span></span><span class='lparen'>(</span>
@@ -78,7 +78,7 @@
             <span class='rparen'>)</span>
 </code></pre>
 
-<p>To learn more about these settings, see the initialize method in <span class='object_link'><a href="PcrBatcher.html" title="PcrBatcher (class)">PcrBatcher</a></span></p>
+<p>To learn more about these settings, see the <a href="https://gamemackerel.github.io/PCR-Batching/doc/PcrBatcher.html#initialize-instance_method">initialize method in PcrBatcher</a></p>
 
 <p>Next, give the PcrBatcher information about each PCR reaction you would like to run using add_pcr_operation. Let&#39;s say we need to run 3 reactions at once, two of which have a very similar extension time requirement.</p>
 
@@ -99,29 +99,28 @@
             <span class='rparen'>)</span>
 </code></pre>
 
-<p>Finally, we can let the batcher organize these into space efficient groupings. With 4 open thermocyclers and only 3 reactions, this shouldn&#39;t be too much trouble.</p>
+<p>Finally, we can let the batcher organize these into space efficient groupings. With 4 open thermocyclers and only 3 reactions, this shouldn&#39;t be too much trouble. Because the extension times are very similar for pcr operation 1 and 2, we should expect the batcher to place them in the same thermocycler group.</p>
 
 <pre class="code ruby"><code class="ruby">    <span class='id identifier rubyid_batching_result'>batching_result</span> <span class='op'>=</span> <span class='id identifier rubyid_my_batcher'>my_batcher</span><span class='period'>.</span><span class='id identifier rubyid_batch'>batch</span>
 </code></pre>
 
 <p>The result of the batching is a map from extension time group to a list of annealing temperature groups, with the idea that each group of reactions with similar extension time can be run in the same thermocycler, while each subgroup of reactions with similar annealing temperature within that extension time group can be run in the same row of that thermocycler.</p>
 
-<p>If that didn&#39;t make sense, let&#39;s break down our batching_result to see what this looks like in practice. There should be two extension time groups.</p>
+<p>If that didn&#39;t make sense, let&#39;s break down our batching_result to see what this looks like in practice.</p>
 
-<pre class="code ruby"><code class="ruby">    <span class='id identifier rubyid_g1_key'>g1_key</span><span class='comma'>,</span> <span class='id identifier rubyid_g1_value'>g1_value</span> <span class='op'>=</span> <span class='id identifier rubyid_batching_result'>batching_result</span><span class='period'>.</span><span class='id identifier rubyid_first'>first</span>
-    <span class='id identifier rubyid_g2_key'>g2_key</span><span class='comma'>,</span> <span class='id identifier rubyid_g2_value'>g2_value</span> <span class='op'>=</span> <span class='id identifier rubyid_batching_result'>batching_result</span><span class='period'>.</span><span class='id identifier rubyid_last'>last</span>
+<pre class="code ruby"><code class="ruby">    <span class='id identifier rubyid_key'>key</span><span class='comma'>,</span> <span class='id identifier rubyid_value'>value</span> <span class='op'>=</span> <span class='id identifier rubyid_batching_result'>batching_result</span><span class='period'>.</span><span class='id identifier rubyid_first'>first</span>
 
-    <span class='id identifier rubyid_g1_key'>g1_key</span> <span class='comment'>#=&gt; ExtensionCluster&lt;@size: 2&gt;
-</span>    <span class='id identifier rubyid_g1_key'>g1_key</span><span class='period'>.</span><span class='id identifier rubyid_mean_extension'>mean_extension</span> <span class='comment'>#=&gt; 59.5
-</span>    <span class='id identifier rubyid_g1_key'>g1_key</span><span class='period'>.</span><span class='id identifier rubyid_members'>members</span> <span class='comment'>#=&gt; [PcrOperation&lt;@unique_id: 1&gt;, PcrOperation&lt;@unique_id: 2&gt;]
-</span>    <span class='id identifier rubyid_g1_value'>g1_value</span> <span class='comment'>#=&gt; [TannealCluster&lt;@size: 1&gt;, TannealCluster&lt;@size: 1&gt;]
-</span>    <span class='id identifier rubyid_g1_value'>g1_value</span><span class='period'>.</span><span class='id identifier rubyid_first'>first</span><span class='period'>.</span><span class='id identifier rubyid_mean_anneal'>mean_anneal</span> <span class='comment'>#=&gt; 69
-</span>    <span class='id identifier rubyid_g1_value'>g1_value</span><span class='period'>.</span><span class='id identifier rubyid_first'>first</span><span class='period'>.</span><span class='id identifier rubyid_members'>members</span> <span class='comment'>#=&gt; [PcrOperation&lt;@unique_id: 1&gt;]
+    <span class='id identifier rubyid_key'>key</span> <span class='comment'>#=&gt; ExtensionCluster&lt;@size: 2&gt;
+</span>    <span class='id identifier rubyid_key'>key</span><span class='period'>.</span><span class='id identifier rubyid_mean_extension'>mean_extension</span> <span class='comment'>#=&gt; 59.5
+</span>    <span class='id identifier rubyid_key'>key</span><span class='period'>.</span><span class='id identifier rubyid_members'>members</span> <span class='comment'>#=&gt; [PcrOperation&lt;@unique_id: 1&gt;, PcrOperation&lt;@unique_id: 2&gt;]
+</span>    <span class='id identifier rubyid_value'>value</span> <span class='comment'>#=&gt; [TannealCluster&lt;@size: 1&gt;, TannealCluster&lt;@size: 1&gt;]
+</span>    <span class='id identifier rubyid_value'>value</span><span class='period'>.</span><span class='id identifier rubyid_first'>first</span><span class='period'>.</span><span class='id identifier rubyid_mean_anneal'>mean_anneal</span> <span class='comment'>#=&gt; 69
+</span>    <span class='id identifier rubyid_value'>value</span><span class='period'>.</span><span class='id identifier rubyid_first'>first</span><span class='period'>.</span><span class='id identifier rubyid_members'>members</span> <span class='comment'>#=&gt; [PcrOperation&lt;@unique_id: 1&gt;]
 </span></code></pre>
 
 <p>From the values so far inspected from the hash returned by PcrBatcher, it seems that Pcr 1 and 2 should go in the same thermocycler using an extension time of 59.5 seconds; and within that thermocycler, PcrOperation 1 should be placed on a row close to 69 degrees C.</p>
 
-<p>There are a few other useful methods for <span class='object_link'><a href="TannealCluster.html" title="TannealCluster (class)">TannealCluster</a></span> and <span class='object_link'><a href="ExtensionCluster.html" title="ExtensionCluster (class)">ExtensionCluster</a></span> objects that you can find in the <a href="https://gamemackerel.github.io/PCR-Batching/">yard generated documentation</a>.</p>
+<p><a href="https://gamemackerel.github.io/PCR-Batching/doc">View other useful methods in the yard generated documentation</a>.</p>
 
 <p><a href="https://github.com/Gamemackerel/PCR-Batching">Source code available on github</a></p>
 </div></div>
