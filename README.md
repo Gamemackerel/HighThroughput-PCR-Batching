@@ -1,5 +1,5 @@
 ## High Throughput PCR Batching
-Ruby Gem which allows optimized batching of as many pcr operations as possible in a set amount of thermocyclers.
+Ruby Gem intended for biologists, to make high-throughput PCR easy. Allows optimized batching of as many pcr operations as possible in a set amount of thermocyclers.
 
 Install gem with `gem "pcr_batching", :git => "git://github.com:Gamemackerel/PCR-Batching.git"`
 
